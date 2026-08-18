@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>OEP Visual Analysis Assistant</title>
+  <meta name="theme-color" content="#16233F">
+  <meta name="description" content="Clinical decision-support mock-up for Dr. Leo Manas' 21-Point Visual Analysis and Case Chaining framework.">
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%2316233F%22/><circle cx=%2250%22 cy=%2250%22 r=%2234%22 fill=%22none%22 stroke=%22%23A8792B%22 stroke-width=%224%22/><text x=%2250%22 y=%2258%22 font-family=%22Georgia,serif%22 font-size=%2228%22 fill=%22%23F5F6F2%22 text-anchor=%22middle%22>21</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="nameplate">
+  <div class="brand">
+    <div class="brand-mark">21°</div>
+    <div class="brand-text">
+      <h1>OEP Visual Analysis Assistant</h1>
+      <p>Manas 21&#8209;Point &middot; Case Chaining Engine</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span class="pwa-badge" id="pwaStatus"><span class="pwa-dot"></span> Offline&#8209;ready</span>
+    <button class="btn-ghost" id="installBtn" hidden>Install App</button>
+    <button class="btn-preset" id="btnB1">Sample B1 Case</button>
+    <button class="btn-preset" id="btnB2">Sample B2 Case</button>
+    <button class="btn-preset" id="btnC">Sample C Case</button>
+    <button class="btn-reset" id="resetBtn">Reset</button>
+  </div>
+</header>
+
+<main>
+
+  <div class="app-intro">
+    <div>
+      <p class="eyebrow">Chairside decision support &mdash; mock-up</p>
+      <p>Enter encoded findings below. Every value is checked against the OEP Table of Expecteds in real time, and the Case Chaining engine assembles the High/Low diagnostic fraction as you type. Phorias now use a single signed number line: <strong>Exo is positive, Ortho is zero, Eso is negative.</strong></p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       BADGE LEGEND — how to read the Status column below
+  ============================================================= -->
+  <section class="legend-bar" aria-label="Status badge legend">
+    <span class="legend-title">Status legend</span>
+    <span class="legend-item"><span class="badge wnl">WNL</span> within normal limits</span>
+    <span class="legend-item"><span class="badge high">HIGH (H)</span> above expected</span>
+    <span class="legend-item"><span class="badge low">LOW (L)</span> below expected</span>
+    <span class="legend-item"><span class="badge amber">BORDERLINE</span> between minimum &amp; average</span>
+    <span class="legend-item"><span class="badge idle">&mdash;</span> not yet encoded</span>
+  </section>
+
+  <!-- ============================================================
+       SECTION 1 — REFRACTIVE BASELINE
+  ============================================================= -->
+  <section class="card" id="card-baseline">
+    <div class="card-head">
+      <h2>Refractive Baseline</h2>
+      <span class="sub">Points #4&ndash;#7a</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th style="width:70px">Pt.</th><th>Finding</th><th>Encoded</th><th>Expected</th><th style="width:90px">Status</th></tr></thead>
+      <tbody id="tbl-baseline"></tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       SECTION 2 — DISTANCE FINDINGS (6M)
+  ============================================================= -->
+  <section class="card" id="card-distance">
+    <div class="card-head">
+      <h2>Distance Findings <span class="sub">(6&nbsp;m)</span></h2>
+      <span class="sub">Points #8&ndash;#11</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th style="width:70px">Pt.</th><th>Finding</th><th>Encoded</th><th>Expected</th><th style="width:90px">Status</th></tr></thead>
+      <tbody id="tbl-distance"></tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       SECTION 3 — NEARPOINT FINDINGS (40CM)
+  ============================================================= -->
+  <section class="card" id="card-near">
+    <div class="card-head">
+      <h2>Nearpoint Findings <span class="sub">(40&nbsp;cm)</span></h2>
+      <span class="sub">Points #13b&ndash;#21</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th style="width:70px">Pt.</th><th>Finding</th><th>Encoded</th><th>Expected</th><th style="width:90px">Status</th></tr></thead>
+      <tbody id="tbl-near"></tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       SECTION 4 — DIAGNOSTIC CALCULATIONS
+  ============================================================= -->
+  <section class="diag-grid">
+    <div class="card">
+      <div class="card-head"><h2>Gradient AC/A Ratio</h2><span class="sub">#13b+1.00 &minus; #13b</span></div>
+      <div class="gauge-wrap">
+        <svg id="acaGauge" width="220" height="130" viewBox="0 0 220 130" aria-hidden="true"></svg>
+        <div class="gauge-value" id="acaValue">&mdash;</div>
+        <div class="gauge-label" id="acaLabel">Enter #13b and #13b&nbsp;+1.00D phorias to calculate</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Cross-Cylinder Shift</h2><span class="sub">#15a &minus; #15b</span></div>
+      <div class="shift-visual">
+        <div class="shift-value" id="shiftValue">&mdash;</div>
+        <div class="shift-track"><div class="zero-mark"></div><div class="shift-fill" id="shiftFill"></div></div>
+        <div class="gauge-label" id="shiftLabel">Enter #15a and #15b to calculate the shift direction</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Hofstetter's Amplitude Norms</h2><span class="sub">Point #19</span></div>
+      <div style="padding:16px 18px;">
+        <div class="kv-row"><span class="k">Patient age</span><span class="v" id="hofAge">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Minimum <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft)">(15&minus;0.25&middot;age)</span></span><span class="v" id="hofMin">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Average <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft)">(18.5&minus;0.30&middot;age)</span></span><span class="v" id="hofAvg">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Measured (#19)</span><span class="v" id="hofMeasured">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Interpretation</span><span class="v" id="hofBadge">&mdash;</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 5 — CASE CHAINING / DIFFERENTIAL DIAGNOSIS
+  ============================================================= -->
+  <section class="card chain-card" id="card-chain">
+    <div class="card-head" style="border-bottom:none;">
+      <h2>Case Chaining &amp; Differential Diagnosis</h2>
+      <span class="sub">High findings / Low findings</span>
+    </div>
+
+    <div class="chain-fraction">
+      <div class="chain-row numer" id="chainHigh"><span class="chain-empty">No high findings encoded yet</span></div>
+      <div class="chain-rule"></div>
+      <div class="chain-row denom" id="chainLow"><span class="chain-empty">No low findings encoded yet</span></div>
+    </div>
+
+    <div class="syndrome-result" id="syndromeBox">
+      <span class="type-tag" id="syndromeTag">AWAITING DATA</span>
+      <h3 id="syndromeTitle">Insufficient findings for classification</h3>
+      <p id="syndromeDesc">Encode distance and near vergence reserves, accommodative findings, and the gradient AC/A to activate the syndrome-matching rules for Types B1, B2, C, and Convergence Insufficiency / Excess.</p>
+      <ul class="mgmt-list" id="mgmtList"></ul>
+    </div>
+  </section>
+
+  <footer>OEP Visual Analysis Assistant &middot; educational mock&#8209;up of the Manas 21&#8209;Point framework &middot; not a substitute for clinical judgment</footer>
+</main>
+
+<!-- Shared tooltip popover for the #4/#5/#6 info icons. Kept as a direct
+     body child (not nested in any .card) so it is never clipped, and
+     positioned in JS as position:fixed relative to the trigger icon. -->
+<div class="tooltip-card" id="tooltipPopover" role="tooltip"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

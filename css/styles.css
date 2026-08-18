@@ -1,0 +1,831 @@
+/* ============================================================
+   DESIGN TOKENS — "Optometric Ledger"
+============================================================ */
+:root {
+  --paper:      #F5F6F2;
+  --paper-2:    #EBEDE6;
+  --ink:        #16233F;
+  --ink-soft:   #4B5670;
+  --line:       #D8D9CD;
+  --brass:      #A8792B;
+  --brass-soft: #EFE2C4;
+  --wnl:        #2F6D4F;
+  --wnl-bg:     #E4EFE7;
+  --high:       #B4463C;
+  --high-bg:    #F5E3E1;
+  --low:        #3D6C93;
+  --low-bg:     #E2ECF3;
+  --amber:      #C68A2E;
+  --amber-bg:   #F7EBD6;
+  --font-serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font-sans:  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:  ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --radius: 3px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--brass-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--brass);
+}
+
+/* ---------- Header / Nameplate ---------- */
+header.nameplate {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 14px clamp(14px, 3vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 3px solid var(--brass);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 1.5px solid var(--brass);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--brass);
+  position: relative;
+}
+
+.brand-mark::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed rgba(168, 121, 43, 0.55);
+  border-radius: 50%;
+}
+
+.brand-text h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(16px, 2.4vw, 20px);
+  letter-spacing: 0.2px;
+}
+
+.brand-text p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: #B9C2D6;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pwa-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #CFE0D4;
+  padding: 5px 9px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.pwa-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6FBF8B;
+  box-shadow: 0 0 0 3px rgba(111, 191, 139, 0.18);
+}
+
+button {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  letter-spacing: 0.2px;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--brass);
+  color: #231A0B;
+  border-color: var(--brass);
+}
+
+.btn-primary:hover {
+  background: #BC8B3E;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--paper);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.btn-ghost:hover {
+  border-color: var(--brass);
+  color: var(--brass-soft);
+}
+
+.btn-preset {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--paper);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.btn-preset:hover {
+  border-color: var(--brass);
+  background: rgba(168, 121, 43, 0.18);
+}
+
+.btn-reset {
+  background: transparent;
+  color: #E7B9B4;
+  border-color: rgba(231, 185, 180, 0.4);
+}
+
+.btn-reset:hover {
+  border-color: #E7B9B4;
+  background: rgba(180, 70, 60, 0.15);
+}
+
+/* ---------- Layout shell ---------- */
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 22px clamp(12px, 3vw, 28px) 80px;
+  display: grid;
+  gap: 20px;
+}
+
+.app-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: -4px;
+}
+
+.app-intro p {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  max-width: 62ch;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 0;
+}
+
+/* ---------- Badge legend ---------- */
+.legend-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.legend-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* ---------- Record card ---------- */
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #fff, #FBFBF8);
+}
+
+.card-head h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.card-head .sub {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+.field-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.field-table thead th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-2);
+}
+
+.field-table tbody tr {
+  border-bottom: 1px solid var(--line);
+}
+
+.field-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.field-table tbody tr:hover {
+  background: #FBFAF4;
+}
+
+.field-table td {
+  padding: 9px 18px;
+  vertical-align: middle;
+}
+
+.oep-no {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--brass);
+  white-space: nowrap;
+}
+
+.flabel {
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.flabel small {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+input[type=number] {
+  width: 92px;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #FCFCFA;
+  color: var(--ink);
+}
+
+input[type=number].signed-input {
+  width: 120px;
+}
+
+input[type=number]:focus {
+  border-color: var(--brass);
+  background: #fff;
+}
+
+.unit {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+/* Live-translated clinical preview under signed phoria inputs */
+.phoria-preview {
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--brass);
+  min-height: 14px;
+  letter-spacing: 0.2px;
+}
+
+.phoria-preview.eso {
+  color: var(--low);
+}
+
+.phoria-preview.exo {
+  color: var(--wnl);
+}
+
+.phoria-preview.ortho {
+  color: var(--ink-soft);
+}
+
+.phoria-preview.empty {
+  color: #B7BAC0;
+}
+
+.norm-text {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+/* Info icon (tooltip trigger) next to #4/#5/#6 labels */
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--brass);
+  background: transparent;
+  color: var(--brass);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  line-height: 1;
+  cursor: help;
+  margin-left: 6px;
+  padding: 0;
+  vertical-align: middle;
+  transition: background .15s ease, color .15s ease;
+}
+
+.info-icon:hover,
+.info-icon:focus-visible {
+  background: var(--brass);
+  color: #fff;
+  outline: none;
+}
+
+.info-icon[aria-expanded="true"] {
+  background: var(--brass);
+  color: #fff;
+}
+
+/* Shared tooltip popover — appended once at body level so a card's
+   overflow:hidden can never clip it; positioned via JS as position:fixed. */
+.tooltip-card {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  max-width: 300px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brass);
+  border-radius: 6px;
+  box-shadow: 0 10px 28px rgba(22, 35, 63, 0.2);
+  padding: 12px 14px;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+.tooltip-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.tooltip-card .tt-head {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tooltip-card dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  align-items: start;
+}
+
+.tooltip-card dt {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--brass);
+  white-space: nowrap;
+  padding-top: 1px;
+}
+
+.tooltip-card dd {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.tooltip-card dd.tt-high {
+  color: var(--high);
+}
+
+.tooltip-card dd.tt-low {
+  color: var(--low);
+}
+
+/* Real-time clinical interpretation caption under #4/#5/#6 inputs */
+.interp-tag {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  min-height: 14px;
+  letter-spacing: 0.1px;
+}
+
+.interp-tag.high {
+  color: var(--high);
+}
+
+.interp-tag.low {
+  color: var(--low);
+}
+
+.interp-tag.wnl {
+  color: var(--wnl);
+}
+
+.interp-tag.amber {
+  color: var(--amber);
+}
+
+.interp-tag.idle {
+  color: #B7BAC0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.badge.wnl {
+  color: var(--wnl);
+  background: var(--wnl-bg);
+  border-color: #CADFCE;
+}
+
+.badge.high {
+  color: var(--high);
+  background: var(--high-bg);
+  border-color: #EBC8C3;
+}
+
+.badge.low {
+  color: var(--low);
+  background: var(--low-bg);
+  border-color: #C6D8E6;
+}
+
+.badge.amber {
+  color: var(--amber);
+  background: var(--amber-bg);
+  border-color: #E9D6A9;
+}
+
+.badge.idle {
+  color: #9AA1AE;
+  background: #F1F1EE;
+  border-color: var(--line);
+}
+
+/* ---------- Diagnostics section ---------- */
+.diag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px;
+}
+
+.gauge-value {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.gauge-label {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.kv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13px;
+}
+
+.kv-row:last-child {
+  border-bottom: none;
+}
+
+.kv-row .k {
+  color: var(--ink-soft);
+}
+
+.kv-row .v {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.shift-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+}
+
+.shift-track {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  height: 10px;
+  background: var(--paper-2);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.shift-track .zero-mark {
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  bottom: -4px;
+  width: 1px;
+  background: var(--ink-soft);
+}
+
+.shift-track .shift-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--brass);
+  border-radius: 6px;
+}
+
+.shift-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* ---------- Case chain fraction ---------- */
+.chain-card {
+  padding: 18px;
+}
+
+.chain-fraction {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 560px;
+  margin: 6px auto 14px;
+}
+
+.chain-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 4px;
+  min-height: 38px;
+  align-items: center;
+}
+
+.chain-rule {
+  height: 2px;
+  background: var(--ink);
+  margin: 0 4px;
+  border-radius: 1px;
+}
+
+.chain-chip {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 4px 9px;
+  border-radius: 4px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.chain-chip.high {
+  color: var(--high);
+  background: var(--high-bg);
+  border-color: #EBC8C3;
+}
+
+.chain-chip.low {
+  color: var(--low);
+  background: var(--low-bg);
+  border-color: #C6D8E6;
+}
+
+.chain-empty {
+  color: #A9AFB9;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.syndrome-result {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px;
+  background: var(--paper-2);
+  margin-top: 10px;
+}
+
+.syndrome-result h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.syndrome-result .type-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #fff;
+  background: var(--ink);
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin-bottom: 6px;
+}
+
+.syndrome-result p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.mgmt-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.mgmt-list li {
+  font-size: 13px;
+  padding: 9px 12px;
+  background: #fff;
+  border-radius: 0 4px 4px 0;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brass);
+}
+
+footer {
+  text-align: center;
+  padding: 18px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 640px) {
+  .field-table thead {
+    display: none;
+  }
+  .field-table,
+  .field-table tbody,
+  .field-table tr,
+  .field-table td {
+    display: block;
+    width: 100%;
+  }
+  .field-table tbody tr {
+    padding: 10px 14px 12px;
+  }
+  .field-table td {
+    padding: 3px 0;
+  }
+  .field-table td.cell-oep {
+    display: none;
+  }
+  .flabel::before {
+    content: attr(data-oep) " ";
+    color: var(--brass);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .norm-text {
+    display: block;
+    margin-top: 2px;
+  }
+}

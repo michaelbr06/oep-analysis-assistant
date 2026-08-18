@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OEP Visual Analysis Assistant</title>
+<meta name="theme-color" content="#16233F">
+<meta name="description" content="Clinical decision-support mock-up for Dr. Leo Manas' 21-Point Visual Analysis and Case Chaining framework.">
+
+<!--====================================================================
+  PWA MOCK SETUP
+  The manifest and service worker are generated in-memory (Blob/data URIs)
+  so the entire app remains a single, portable HTML file with no external
+  network dependency. This is a functional mock: it registers a real
+  service worker that caches this document for offline use.
+=====================================================================-->
+<link id="manifestLink" rel="manifest">
+
+<style>
+  /* ============================================================
+     DESIGN TOKENS — "Optometric Ledger"
+  ============================================================ */
+  :root{
+    --paper:      #F5F6F2;
+    --paper-2:    #EBEDE6;
+    --ink:        #16233F;
+    --ink-soft:   #4B5670;
+    --line:       #D8D9CD;
+    --brass:      #A8792B;
+    --brass-soft: #EFE2C4;
+    --wnl:        #2F6D4F;
+    --wnl-bg:     #E4EFE7;
+    --high:       #B4463C;
+    --high-bg:    #F5E3E1;
+    --low:        #3D6C93;
+    --low-bg:     #E2ECF3;
+    --amber:      #C68A2E;
+    --amber-bg:   #F7EBD6;
+    --font-serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --font-sans:  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono:  ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --radius: 3px;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-sans);
+    line-height:1.4;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--brass-soft); }
+  :focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
+  a{ color:var(--brass); }
+
+  /* ---------- Header / Nameplate ---------- */
+  header.nameplate{
+    background:var(--ink);
+    color:var(--paper);
+    padding:14px clamp(14px,3vw,32px);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    border-bottom:3px solid var(--brass);
+    position:sticky;
+    top:0;
+    z-index:40;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; min-width:0; }
+  .brand-mark{
+    width:40px; height:40px; flex:none;
+    border:1.5px solid var(--brass);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:11px; letter-spacing:0.5px;
+    color:var(--brass);
+    position:relative;
+  }
+  .brand-mark::before{
+    content:"";
+    position:absolute; inset:5px;
+    border:1px dashed rgba(168,121,43,0.55);
+    border-radius:50%;
+  }
+  .brand-text h1{
+    margin:0; font-family:var(--font-serif); font-weight:700;
+    font-size:clamp(16px,2.4vw,20px); letter-spacing:0.2px;
+  }
+  .brand-text p{
+    margin:2px 0 0; font-size:11.5px; color:#B9C2D6;
+    letter-spacing:0.4px; text-transform:uppercase;
+  }
+  .header-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .pwa-badge{
+    font-family:var(--font-mono); font-size:11px;
+    border:1px solid rgba(255,255,255,0.25);
+    color:#CFE0D4; padding:5px 9px; border-radius:20px;
+    display:flex; align-items:center; gap:6px;
+    white-space:nowrap;
+  }
+  .pwa-dot{ width:7px; height:7px; border-radius:50%; background:#6FBF8B; box-shadow:0 0 0 3px rgba(111,191,139,0.18); }
+
+  button{
+    font-family:var(--font-sans); font-size:12.5px; font-weight:600;
+    border-radius:var(--radius); cursor:pointer; border:1px solid transparent;
+    padding:8px 12px; letter-spacing:0.2px;
+    transition:transform .08s ease, background .15s ease, border-color .15s ease;
+  }
+  button:active{ transform:translateY(1px); }
+  .btn-primary{ background:var(--brass); color:#231A0B; border-color:var(--brass); }
+  .btn-primary:hover{ background:#BC8B3E; }
+  .btn-ghost{ background:transparent; color:var(--paper); border-color:rgba(255,255,255,0.35); }
+  .btn-ghost:hover{ border-color:var(--brass); color:var(--brass-soft); }
+  .btn-preset{ background:rgba(255,255,255,0.06); color:var(--paper); border-color:rgba(255,255,255,0.28); }
+  .btn-preset:hover{ border-color:var(--brass); background:rgba(168,121,43,0.18); }
+  .btn-reset{ background:transparent; color:#E7B9B4; border-color:rgba(231,185,180,0.4); }
+  .btn-reset:hover{ border-color:#E7B9B4; background:rgba(180,70,60,0.15); }
+
+  /* ---------- Layout shell ---------- */
+  main{
+    max-width:1180px; margin:0 auto;
+    padding:22px clamp(12px,3vw,28px) 80px;
+    display:grid; gap:20px;
+  }
+  .app-intro{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:16px; flex-wrap:wrap; margin-bottom:-4px;
+  }
+  .app-intro p{ margin:4px 0 0; color:var(--ink-soft); font-size:13px; max-width:62ch; }
+  .eyebrow{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:1.4px;
+    text-transform:uppercase; color:var(--brass); margin:0;
+  }
+
+  /* ---------- Badge legend ---------- */
+  .legend-bar{
+    display:flex; align-items:center; flex-wrap:wrap; gap:10px 18px;
+    background:#fff; border:1px solid var(--line); border-radius:6px;
+    padding:10px 16px; font-size:12.5px; color:var(--ink-soft);
+  }
+  .legend-title{
+    font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase;
+    letter-spacing:0.6px; color:var(--ink); font-weight:700; margin-right:4px;
+  }
+  .legend-item{ display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+
+  /* ---------- Record card ---------- */
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .card-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:10px; flex-wrap:wrap;
+    padding:14px 18px 12px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fff, #FBFBF8);
+  }
+  .card-head h2{ margin:0; font-family:var(--font-serif); font-size:17px; color:var(--ink); }
+  .card-head .sub{ font-size:12px; color:var(--ink-soft); font-family:var(--font-mono); }
+
+  .field-table{ width:100%; border-collapse:collapse; }
+  .field-table thead th{
+    text-align:left; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:0.6px; color:var(--ink-soft); font-weight:600;
+    padding:8px 18px; border-bottom:1px solid var(--line); background:var(--paper-2);
+  }
+  .field-table tbody tr{ border-bottom:1px solid var(--line); }
+  .field-table tbody tr:last-child{ border-bottom:none; }
+  .field-table tbody tr:hover{ background:#FBFAF4; }
+  .field-table td{ padding:9px 18px; vertical-align:middle; }
+  .oep-no{ font-family:var(--font-mono); font-size:11px; color:var(--brass); white-space:nowrap; }
+  .flabel{ font-size:13.5px; color:var(--ink); }
+  .flabel small{ display:block; color:var(--ink-soft); font-size:11px; font-weight:400; }
+
+  .entry{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  input[type=number]{
+    width:92px; font-family:var(--font-mono); font-size:13.5px;
+    padding:6px 8px; border:1px solid var(--line); border-radius:var(--radius);
+    background:#FCFCFA; color:var(--ink);
+  }
+  input[type=number].signed-input{ width:120px; }
+  input[type=number]:focus{ border-color:var(--brass); background:#fff; }
+  .unit{ font-size:11.5px; color:var(--ink-soft); font-family:var(--font-mono); }
+
+  /* Live-translated clinical preview under signed phoria inputs */
+  .phoria-preview{
+    margin-top:3px; font-family:var(--font-mono); font-size:11px;
+    color:var(--brass); min-height:14px; letter-spacing:0.2px;
+  }
+  .phoria-preview.eso{ color:var(--low); }
+  .phoria-preview.exo{ color:var(--wnl); }
+  .phoria-preview.ortho{ color:var(--ink-soft); }
+  .phoria-preview.empty{ color:#B7BAC0; }
+
+  .norm-text{ font-size:11.5px; color:var(--ink-soft); font-family:var(--font-mono); white-space:nowrap; }
+
+  /* Info icon (tooltip trigger) next to #4/#5/#6 labels */
+  .info-icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:16px; height:16px; border-radius:50%; border:1px solid var(--brass);
+    background:transparent; color:var(--brass); font-size:10px; font-weight:700;
+    font-family:var(--font-mono); line-height:1; cursor:help; margin-left:6px;
+    padding:0; vertical-align:middle; transition:background .15s ease, color .15s ease;
+  }
+  .info-icon:hover, .info-icon:focus-visible{ background:var(--brass); color:#fff; outline:none; }
+  .info-icon[aria-expanded="true"]{ background:var(--brass); color:#fff; }
+
+  /* Shared tooltip popover — appended once at body level so a card's
+     overflow:hidden can never clip it; positioned via JS as position:fixed. */
+  .tooltip-card{
+    position:fixed; top:0; left:0; z-index:999; max-width:300px;
+    background:#fff; border:1px solid var(--line); border-left:3px solid var(--brass);
+    border-radius:6px; box-shadow:0 10px 28px rgba(22,35,63,0.2);
+    padding:12px 14px; opacity:0; transform:translateY(-4px);
+    pointer-events:none; transition:opacity .15s ease, transform .15s ease;
+  }
+  .tooltip-card.visible{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .tooltip-card .tt-head{ margin:0 0 8px; font-family:var(--font-serif); font-size:13.5px; font-weight:700; color:var(--ink); }
+  .tooltip-card dl{ margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 10px; align-items:start; }
+  .tooltip-card dt{ font-family:var(--font-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--brass); white-space:nowrap; padding-top:1px; }
+  .tooltip-card dd{ margin:0; font-size:12px; line-height:1.4; color:var(--ink-soft); }
+  .tooltip-card dd.tt-high{ color:var(--high); }
+  .tooltip-card dd.tt-low{ color:var(--low); }
+
+  /* Real-time clinical interpretation caption under #4/#5/#6 inputs */
+  .interp-tag{
+    margin-top:4px; font-family:var(--font-mono); font-size:11px;
+    min-height:14px; letter-spacing:0.1px;
+  }
+  .interp-tag.high{ color:var(--high); }
+  .interp-tag.low{ color:var(--low); }
+  .interp-tag.wnl{ color:var(--wnl); }
+  .interp-tag.amber{ color:var(--amber); }
+  .interp-tag.idle{ color:#B7BAC0; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:4px;
+    font-family:var(--font-mono); font-size:10.5px; font-weight:700;
+    padding:3px 8px; border-radius:20px; letter-spacing:0.3px;
+    white-space:nowrap; border:1px solid transparent;
+  }
+  .badge.wnl{ color:var(--wnl); background:var(--wnl-bg); border-color:#CADFCE; }
+  .badge.high{ color:var(--high); background:var(--high-bg); border-color:#EBC8C3; }
+  .badge.low{ color:var(--low); background:var(--low-bg); border-color:#C6D8E6; }
+  .badge.amber{ color:var(--amber); background:var(--amber-bg); border-color:#E9D6A9; }
+  .badge.idle{ color:#9AA1AE; background:#F1F1EE; border-color:var(--line); }
+
+  /* ---------- Diagnostics section ---------- */
+  .diag-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:20px; }
+
+  .gauge-wrap{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:18px; }
+  .gauge-value{ font-family:var(--font-mono); font-size:26px; color:var(--ink); font-weight:700; }
+  .gauge-label{ font-size:11.5px; color:var(--ink-soft); text-align:center; }
+
+  .kv-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 4px; border-bottom:1px dashed var(--line); font-size:13px;
+  }
+  .kv-row:last-child{ border-bottom:none; }
+  .kv-row .k{ color:var(--ink-soft); }
+  .kv-row .v{ font-family:var(--font-mono); font-weight:600; }
+
+  .shift-visual{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:18px; }
+  .shift-track{ position:relative; width:100%; max-width:280px; height:10px; background:var(--paper-2); border-radius:6px; border:1px solid var(--line); }
+  .shift-track .zero-mark{ position:absolute; left:50%; top:-4px; bottom:-4px; width:1px; background:var(--ink-soft); }
+  .shift-track .shift-fill{ position:absolute; top:0; bottom:0; background:var(--brass); border-radius:6px; }
+  .shift-value{ font-family:var(--font-mono); font-size:22px; color:var(--ink); font-weight:700; }
+
+  /* ---------- Case chain fraction ---------- */
+  .chain-card{ padding:18px; }
+  .chain-fraction{ display:flex; flex-direction:column; align-items:stretch; max-width:560px; margin:6px auto 14px; }
+  .chain-row{ display:flex; flex-wrap:wrap; gap:6px; padding:10px 4px; min-height:38px; align-items:center; }
+  .chain-rule{ height:2px; background:var(--ink); margin:0 4px; border-radius:1px; }
+  .chain-chip{ font-family:var(--font-mono); font-size:11.5px; padding:4px 9px; border-radius:4px; border:1px solid; white-space:nowrap; }
+  .chain-chip.high{ color:var(--high); background:var(--high-bg); border-color:#EBC8C3; }
+  .chain-chip.low{ color:var(--low); background:var(--low-bg); border-color:#C6D8E6; }
+  .chain-empty{ color:#A9AFB9; font-size:12px; font-style:italic; }
+
+  .syndrome-result{ border:1px solid var(--line); border-radius:6px; padding:14px 16px; background:var(--paper-2); margin-top:10px; }
+  .syndrome-result h3{ margin:0 0 4px; font-family:var(--font-serif); font-size:16px; color:var(--ink); }
+  .syndrome-result .type-tag{ display:inline-block; font-family:var(--font-mono); font-size:11px; color:#fff; background:var(--ink); padding:2px 8px; border-radius:3px; margin-bottom:6px; }
+  .syndrome-result p{ margin:6px 0 0; font-size:13px; color:var(--ink-soft); }
+
+  .mgmt-list{ list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
+  .mgmt-list li{ font-size:13px; padding:9px 12px; background:#fff; border-radius:0 4px 4px 0; border:1px solid var(--line); border-left:3px solid var(--brass); }
+
+  footer{ text-align:center; padding:18px; font-size:11px; color:var(--ink-soft); font-family:var(--font-mono); }
+
+  @media (max-width:640px){
+    .field-table thead{ display:none; }
+    .field-table, .field-table tbody, .field-table tr, .field-table td{ display:block; width:100%; }
+    .field-table tbody tr{ padding:10px 14px 12px; }
+    .field-table td{ padding:3px 0; }
+    .field-table td.cell-oep{ display:none; }
+    .flabel::before{ content: attr(data-oep) " "; color:var(--brass); font-family:var(--font-mono); font-size:11px; }
+    .norm-text{ display:block; margin-top:2px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nameplate">
+  <div class="brand">
+    <div class="brand-mark">21°</div>
+    <div class="brand-text">
+      <h1>OEP Visual Analysis Assistant</h1>
+      <p>Manas 21&#8209;Point &middot; Case Chaining Engine</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span class="pwa-badge" id="pwaStatus"><span class="pwa-dot"></span> Offline&#8209;ready</span>
+    <button class="btn-ghost" id="installBtn" hidden>Install App</button>
+    <button class="btn-preset" id="btnB1">Sample B1 Case</button>
+    <button class="btn-preset" id="btnB2">Sample B2 Case</button>
+    <button class="btn-preset" id="btnC">Sample C Case</button>
+    <button class="btn-reset" id="resetBtn">Reset</button>
+  </div>
+</header>
+
+<main>
+
+  <div class="app-intro">
+    <div>
+      <p class="eyebrow">Chairside decision support &mdash; mock-up</p>
+      <p>Enter encoded findings below. Every value is checked against the OEP Table of Expecteds in real time, and the Case Chaining engine assembles the High/Low diagnostic fraction as you type. Phorias now use a single signed number line: <strong>Exo is positive, Ortho is zero, Eso is negative.</strong></p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       BADGE LEGEND — how to read the Status column below
+  ============================================================= -->
+  <section class="legend-bar" aria-label="Status badge legend">
+    <span class="legend-title">Status legend</span>
+    <span class="legend-item"><span class="badge wnl">WNL</span> within normal limits</span>
+    <span class="legend-item"><span class="badge high">HIGH (H)</span> above expected</span>
+    <span class="legend-item"><span class="badge low">LOW (L)</span> below expected</span>
+    <span class="legend-item"><span class="badge amber">BORDERLINE</span> between minimum &amp; average</span>
+    <span class="legend-item"><span class="badge idle">&mdash;</span> not yet encoded</span>
+  </section>
+
+  <!-- ============================================================
+       SECTION 1 — REFRACTIVE BASELINE
+  ============================================================= -->
+  <section class="card" id="card-baseline">
+    <div class="card-head">
+      <h2>Refractive Baseline</h2>
+      <span class="sub">Points #4&ndash;#7a</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th style="width:70px">Pt.</th><th>Finding</th><th>Encoded</th><th>Expected</th><th style="width:90px">Status</th></tr></thead>
+      <tbody id="tbl-baseline"></tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       SECTION 2 — DISTANCE FINDINGS (6M)
+  ============================================================= -->
+  <section class="card" id="card-distance">
+    <div class="card-head">
+      <h2>Distance Findings <span class="sub">(6&nbsp;m)</span></h2>
+      <span class="sub">Points #8&ndash;#11</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th style="width:70px">Pt.</th><th>Finding</th><th>Encoded</th><th>Expected</th><th style="width:90px">Status</th></tr></thead>
+      <tbody id="tbl-distance"></tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       SECTION 3 — NEARPOINT FINDINGS (40CM)
+  ============================================================= -->
+  <section class="card" id="card-near">
+    <div class="card-head">
+      <h2>Nearpoint Findings <span class="sub">(40&nbsp;cm)</span></h2>
+      <span class="sub">Points #13b&ndash;#21</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th style="width:70px">Pt.</th><th>Finding</th><th>Encoded</th><th>Expected</th><th style="width:90px">Status</th></tr></thead>
+      <tbody id="tbl-near"></tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       SECTION 4 — DIAGNOSTIC CALCULATIONS
+  ============================================================= -->
+  <section class="diag-grid">
+    <div class="card">
+      <div class="card-head"><h2>Gradient AC/A Ratio</h2><span class="sub">#13b+1.00 &minus; #13b</span></div>
+      <div class="gauge-wrap">
+        <svg id="acaGauge" width="220" height="130" viewBox="0 0 220 130" aria-hidden="true"></svg>
+        <div class="gauge-value" id="acaValue">&mdash;</div>
+        <div class="gauge-label" id="acaLabel">Enter #13b and #13b&nbsp;+1.00D phorias to calculate</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Cross-Cylinder Shift</h2><span class="sub">#15a &minus; #15b</span></div>
+      <div class="shift-visual">
+        <div class="shift-value" id="shiftValue">&mdash;</div>
+        <div class="shift-track"><div class="zero-mark"></div><div class="shift-fill" id="shiftFill"></div></div>
+        <div class="gauge-label" id="shiftLabel">Enter #15a and #15b to calculate the shift direction</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Hofstetter's Amplitude Norms</h2><span class="sub">Point #19</span></div>
+      <div style="padding:16px 18px;">
+        <div class="kv-row"><span class="k">Patient age</span><span class="v" id="hofAge">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Minimum <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft)">(15&minus;0.25&middot;age)</span></span><span class="v" id="hofMin">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Average <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft)">(18.5&minus;0.30&middot;age)</span></span><span class="v" id="hofAvg">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Measured (#19)</span><span class="v" id="hofMeasured">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Interpretation</span><span class="v" id="hofBadge">&mdash;</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 5 — CASE CHAINING / DIFFERENTIAL DIAGNOSIS
+  ============================================================= -->
+  <section class="card chain-card" id="card-chain">
+    <div class="card-head" style="border-bottom:none;">
+      <h2>Case Chaining &amp; Differential Diagnosis</h2>
+      <span class="sub">High findings / Low findings</span>
+    </div>
+
+    <div class="chain-fraction">
+      <div class="chain-row numer" id="chainHigh"><span class="chain-empty">No high findings encoded yet</span></div>
+      <div class="chain-rule"></div>
+      <div class="chain-row denom" id="chainLow"><span class="chain-empty">No low findings encoded yet</span></div>
+    </div>
+
+    <div class="syndrome-result" id="syndromeBox">
+      <span class="type-tag" id="syndromeTag">AWAITING DATA</span>
+      <h3 id="syndromeTitle">Insufficient findings for classification</h3>
+      <p id="syndromeDesc">Encode distance and near vergence reserves, accommodative findings, and the gradient AC/A to activate the syndrome-matching rules for Types B1, B2, C, and Convergence Insufficiency / Excess.</p>
+      <ul class="mgmt-list" id="mgmtList"></ul>
+    </div>
+  </section>
+
+  <footer>OEP Visual Analysis Assistant &middot; educational mock&#8209;up of the Manas 21&#8209;Point framework &middot; not a substitute for clinical judgment</footer>
+</main>
+
+<!-- Shared tooltip popover for the #4/#5/#6 info icons. Kept as a direct
+     body child (not nested in any .card) so it is never clipped, and
+     positioned in JS as position:fixed relative to the trigger icon. -->
+<div class="tooltip-card" id="tooltipPopover" role="tooltip"></div>
+
+<script>
+/* =====================================================================
+   OEP VISUAL ANALYSIS ASSISTANT
+   Vanilla-JS, single-file, no CDN dependencies.
+   ---------------------------------------------------------------------
+   SIGNED PHORIA AXIS (this refactor)
+   All phoria tests (#8, #13b, #13b+1.00, #15a, #15b) share ONE signed
+   number line:
+       Exophoria   = POSITIVE   (+6.0 = 6Δ Exo)
+       Orthophoria = ZERO       (0.0)
+       Esophoria   = NEGATIVE   (-2.0 = 2Δ Eso)
+   The value typed into each phoria input IS the coordinate — no
+   separate direction selector — and every downstream calculation
+   (Gradient AC/A, Cross-Cylinder Shift, case chaining) operates on
+   plain signed subtraction/addition of that coordinate.
+   ---------------------------------------------------------------------
+   CONTENTS
+   1. Field configuration (data-driven form + norm generation)
+   2. Rendering: build the three data-entry tables from FIELDS
+   2b. Clinical reference tooltips for #4 / #5 / #6 (hover + tap popover)
+   3. Live input handling + signed-phoria preview / interpretation labels
+   4. Diagnostic calculations (Gradient AC/A, Cross-Cyl Shift, Hofstetter)
+   5. Case-chaining / syndrome classification engine
+   6. Preset patients (B1 / B2 / C) + reset
+   7. PWA bootstrap (manifest + service worker, both inline)
+===================================================================== */
+
+const fmt = (v, d=2) => (v === null || v === undefined || isNaN(v)) ? '—' : Number(v).toFixed(d);
+
+/* ---------------------------------------------------------------------
+   1. FIELD CONFIGURATION
+------------------------------------------------------------------- */
+
+// Reserve threshold evaluator (unchanged from the base OEP minimums).
+function reserveStatus(value, expected){
+  if (value === null || value === '' || isNaN(value)) return {status:'idle', note:'—'};
+  if (value < expected) return {status:'low', note:`< ${expected}Δ expected`};
+  if (value >= expected * 1.5) return {status:'high', note:`≥ 1.5× expected`};
+  return {status:'wnl', note:`meets ${expected}Δ expected`};
+}
+
+// Signed phoria evaluator against the unified Exo(+)/Ortho(0)/Eso(−) axis.
+// `highAbove` / `lowBelow` are the two literal thresholds from the
+// OEP Table of Expecteds for that specific point.
+function phoriaNormStatus(value, highAbove, lowBelow){
+  if (value === null || isNaN(value)) return {status:'idle', note:'—'};
+  if (value > highAbove) return {status:'high', note:`> +${highAbove}Δ (High Exo)`};
+  if (value < lowBelow)  return {status:'low',  note:`< +${lowBelow}Δ (Low / Eso trend)`};
+  return {status:'wnl', note:'within OEP range'};
+}
+
+function diopterTargetStatus(value, target, direction){
+  if (value === null || isNaN(value)) return {status:'idle', note:'—'};
+  if (direction === 'atLeastNegative'){
+    return value <= target ? {status:'wnl', note:`meets ${target}D`} : {status:'low', note:`short of ${target}D`};
+  }
+  return value >= target ? {status:'wnl', note:`meets +${target}D`} : {status:'low', note:`short of +${target}D`};
+}
+
+const STATE = {};   // STATE[id] = numeric value (or null)
+const FLAGS = {};   // FLAGS[id] = {status, note}
+
+const FIELDS = [
+  // ---- Refractive baseline -----------------------------------------
+  { id:'age', section:'baseline', oep:'—', label:'Age', sub:'years', kind:'num', unit:'yrs', step:'1',
+    evaluate: () => ({status:'idle', note:'reference for #19'}), normText: () => 'Sets amplitude/AC-A norms' },
+
+  { id:'ret4', section:'baseline', oep:'#4', label:'Static Retinoscopy', sub:'Objective, distance — net finding', kind:'num', unit:'D', step:'0.25',
+    hasTooltip:true, hasInterp:true,
+    evaluate: (v) => {
+      const sub7 = STATE.sub7;
+      if (v===null||isNaN(v)||sub7===null||isNaN(sub7)) return {status:'idle', note:'needs #7'};
+      const delta = v - sub7;
+      if (delta > 0.50) return {status:'high', note:`+${fmt(delta)}D over #7 (high)`};
+      if (delta < 0.50) return {status:'low', note:`+${fmt(delta)}D over #7 (low)`};
+      return {status:'wnl', note:'meets +0.50D over #7'};
+    }, normText: () => '#7 + 0.50D (net)',
+    interpretation: (status) => ({
+      high:'Latent Hyperopia / Pseudomyopia / Plus Rejection',
+      low:'Uncompensated Far Strain / Low Plus Acceptance',
+      wnl:'Balanced Static Distance Baseline'
+    }[status] || '') },
+
+  { id:'ret5', section:'baseline', oep:'#5', label:'Dynamic Retinoscopy', sub:'50 cm — High Neutral', kind:'num', unit:'D', step:'0.25',
+    hasTooltip:true, hasInterp:true,
+    evaluate: (v) => {
+      const base = STATE.ret4;
+      if (v===null||isNaN(v)||base===null||isNaN(base)) return {status:'idle', note:'needs #4'};
+      const delta = v - base;
+      if (delta < 0.75) return {status:'low', note:`+${fmt(delta)}D over net #4 (low)`};
+      if (delta > 1.00) return {status:'high', note:`+${fmt(delta)}D over net #4 (high)`};
+      return {status:'wnl', note:`+${fmt(delta)}D over net #4`};
+    }, normText: () => 'Net #4 + 0.75 to +1.00D',
+    interpretation: (status) => ({
+      high:'Type B Accommodative Fatigue / Relieving Plus Indicated',
+      low:'Accommodative Hyper-Reactivity / Spasm',
+      wnl:'Normal High Neutral Response'
+    }[status] || '') },
+
+  { id:'ret6', section:'baseline', oep:'#6', label:'MEM / Dynamic Retinoscopy', sub:'1 m — Low Neutral', kind:'num', unit:'D', step:'0.25',
+    hasTooltip:true, hasInterp:true,
+    evaluate: (v) => {
+      if (v===null||isNaN(v)) return {status:'idle', note:'—'};
+      if (v > 0.75) return {status:'high', note:'lag > +0.75D (high)'};
+      if (v <= 0)   return {status:'low', note:'plano / lead / minus (low)'};
+      return {status:'wnl', note:'within expected lag'};
+    }, normText: () => '+0.25 to +0.50D lag',
+    interpretation: (status) => ({
+      high:'High Accommodative Lag (Under-Accommodating)',
+      low:'Accommodative Lead / Ciliary Spasm (Over-Accommodating)',
+      wnl:'Physiological Lag (+0.25 to +0.50 D)'
+    }[status] || '') },
+
+  { id:'sub7', section:'baseline', oep:'#7/7a', label:'Subjective Refraction', sub:'MPMVA sphere', kind:'num', unit:'D', step:'0.25',
+    evaluate: () => ({status:'idle', note:'baseline value'}), normText: () => 'Clinical baseline' },
+
+  // ---- Distance findings (6m) — #8 uses the signed phoria axis -----
+  { id:'d8', section:'distance', oep:'#8', label:'Induced Phoria', sub:'Von Graefe, distance', kind:'phoria', unit:'Δ',
+    evaluate: (v) => phoriaNormStatus(v, 0.5, 0.0), normText: () => 'Norm +0.5Δ (H > +0.5, L < 0.0)' },
+
+  { id:'d9', section:'distance', oep:'#9', label:'PRV Blur', sub:'Base-out to blur', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 7), normText: () => '7–9Δ' },
+
+  { id:'d10break', section:'distance', oep:'#10', label:'PRV Break', sub:'Base-out to break', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 19), normText: () => '19Δ' },
+
+  { id:'d10rec', section:'distance', oep:'#10', label:'PRV Recovery', sub:'Base-out recovery', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 10), normText: () => '10Δ' },
+
+  { id:'d11break', section:'distance', oep:'#11', label:'NRV Break', sub:'Base-in to break', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 9), normText: () => '9Δ' },
+
+  { id:'d11rec', section:'distance', oep:'#11', label:'NRV Recovery', sub:'Base-in recovery', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 5), normText: () => '5Δ' },
+
+  // ---- Nearpoint findings (40cm) — signed-axis phorias below --------
+  { id:'n13b', section:'near', oep:'#13b', label:'Induced Phoria', sub:'Von Graefe, near', kind:'phoria', unit:'Δ',
+    evaluate: (v) => phoriaNormStatus(v, 6.0, 5.0), normText: () => 'Norm +6.0Δ (H > +6.0, L < +5.0)' },
+
+  { id:'n13b1', section:'near', oep:'#13b+1.00', label:'Phoria through +1.00D', sub:'Gradient AC/A input', kind:'phoria', unit:'Δ',
+    evaluate: () => ({status:'idle', note:'used for AC/A'}), normText: () => 'used for Gradient AC/A' },
+
+  { id:'n14a', section:'near', oep:'#14a', label:'Unfused Cross-Cyl. Net', sub:'±0.50 flip, unfused', kind:'num', unit:'D', step:'0.25',
+    evaluate: (v) => {
+      if (v===null||isNaN(v)) return {status:'idle', note:'—'};
+      if (v < 0.25) return {status:'low', note:'below expected lag'};
+      if (v > 0.75) return {status:'high', note:'above expected lag'};
+      return {status:'wnl', note:'within range'};
+    }, normText: () => '+0.25 to +0.75D' },
+
+  { id:'n14b', section:'near', oep:'#14b', label:'Fused Cross-Cyl. Net', sub:'±0.50 flip, fused', kind:'num', unit:'D', step:'0.25',
+    evaluate: (v) => {
+      if (v===null||isNaN(v)) return {status:'idle', note:'—'};
+      if (v < 0.25) return {status:'low', note:'below expected lag'};
+      if (v > 0.75) return {status:'high', note:'above expected lag'};
+      return {status:'wnl', note:'within range'};
+    }, normText: () => '+0.25 to +0.75D' },
+
+  { id:'n15a', section:'near', oep:'#15a', label:'Phoria thru #14a', sub:'Phoria under cross-cyl.', kind:'phoria', unit:'Δ',
+    evaluate: (v) => phoriaNormStatus(v, 6.0, 5.0), normText: () => 'Norm +6.0Δ (H > +6.0, L < +5.0)' },
+
+  { id:'n15b', section:'near', oep:'#15b', label:'Phoria thru #14b', sub:'Phoria under cross-cyl.', kind:'phoria', unit:'Δ',
+    evaluate: (v) => phoriaNormStatus(v, 6.0, 5.0), normText: () => 'Norm +6.0Δ (H > +6.0, L < +5.0)' },
+
+  { id:'n16a', section:'near', oep:'#16a', label:'PRV Blur', sub:'Base-out to blur, near', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 15), normText: () => '15Δ' },
+
+  { id:'n16bbreak', section:'near', oep:'#16b', label:'PRV Break', sub:'Base-out to break, near', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 21), normText: () => '21Δ' },
+
+  { id:'n16brec', section:'near', oep:'#16b', label:'PRV Recovery', sub:'Base-out recovery, near', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 15), normText: () => '15Δ' },
+
+  { id:'n17a', section:'near', oep:'#17a', label:'NRV Blur', sub:'Base-in to blur, near', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 14), normText: () => '14Δ' },
+
+  { id:'n17bbreak', section:'near', oep:'#17b', label:'NRV Break', sub:'Base-in to break, near', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 22), normText: () => '22Δ' },
+
+  { id:'n17brec', section:'near', oep:'#17b', label:'NRV Recovery', sub:'Base-in recovery, near', kind:'num', unit:'Δ', step:'1',
+    evaluate: (v) => reserveStatus(v, 18), normText: () => '18Δ' },
+
+  { id:'n19', section:'near', oep:'#19', label:'Amplitude of Accommodation', sub:'Push-up, near', kind:'num', unit:'D', step:'0.25',
+    evaluate: (v) => {
+      const age = STATE.age;
+      if (v===null||isNaN(v)) return {status:'idle', note:'—'};
+      if (age===null||isNaN(age)) return {status:'amber', note:'enter age for norm'};
+      const min = 15 - 0.25*age, avg = 18.5 - 0.30*age;
+      if (v < min) return {status:'low', note:`below minimum (${fmt(min,1)}D)`};
+      if (v < avg) return {status:'amber', note:`below average (${fmt(avg,1)}D)`};
+      return {status:'wnl', note:`≥ average (${fmt(avg,1)}D)`};
+    }, normText: () => "Hofstetter: 15−0.25·age (min) / 18.5−0.30·age (avg)" },
+
+  { id:'n20', section:'near', oep:'#20', label:'PRA', sub:'Negative relative accommodation', kind:'num', unit:'D', step:'0.25',
+    evaluate: (v) => diopterTargetStatus(v, -2.50, 'atLeastNegative'), normText: () => '−2.50D' },
+
+  { id:'n21', section:'near', oep:'#21', label:'NRA', sub:'Positive relative accommodation', kind:'num', unit:'D', step:'0.25',
+    evaluate: (v) => diopterTargetStatus(v, 2.00, 'atLeastPositive'), normText: () => '+2.00D' },
+];
+
+/* ---------------------------------------------------------------------
+   2. RENDER FORM
+------------------------------------------------------------------- */
+function badgeHTML(status, note){
+  const labelMap = { wnl:'WNL', high:'HIGH (H)', low:'LOW (L)', amber:'BORDERLINE', idle:'—' };
+  return `<span class="badge ${status}" title="${note||''}">${labelMap[status]||status}</span>`;
+}
+
+// Translate a signed phoria coordinate into the clinical-format preview
+// string, e.g. -3 -> "3Δ Eso", +6 -> "6Δ Exo", 0 -> "Ortho".
+function formatPhoriaPreview(v){
+  if (v === null || v === '' || isNaN(v)) return {text:'—', cls:'empty'};
+  if (v === 0) return {text:'Ortho', cls:'ortho'};
+  if (v > 0)   return {text:`${fmt(Math.abs(v),1)}Δ Exo`, cls:'exo'};
+  return {text:`${fmt(Math.abs(v),1)}Δ Eso`, cls:'eso'};
+}
+
+function renderField(f){
+  const infoIconHTML = f.hasTooltip
+    ? `<button type="button" class="info-icon" data-tooltip-for="${f.id}" aria-label="Clinical reference for ${f.label}" aria-expanded="false">ⓘ</button>`
+    : '';
+
+  const interpHTML = f.hasInterp
+    ? `<div class="interp-tag idle" id="interp-${f.id}">—</div>`
+    : '';
+
+  const controlHTML = f.kind === 'phoria'
+    ? `<div class="entry">
+         <input type="number" step="0.5" class="signed-input" data-signed="${f.id}" placeholder="e.g., +6 or -2">
+         <span class="unit">${f.unit}</span>
+       </div>
+       <div class="phoria-preview empty" id="preview-${f.id}">—</div>`
+    : `<div class="entry">
+         <input type="number" step="${f.step||'0.25'}" data-num="${f.id}" placeholder="—">
+         <span class="unit">${f.unit}</span>
+       </div>${interpHTML}`;
+
+  return `<tr id="row-${f.id}">
+    <td class="cell-oep"><span class="oep-no">${f.oep}</span></td>
+    <td><span class="flabel" data-oep="${f.oep}">${f.label}${infoIconHTML}<small>${f.sub||''}</small></span></td>
+    <td>${controlHTML}</td>
+    <td><span class="norm-text">${f.normText()}</span></td>
+    <td><span id="badge-${f.id}">${badgeHTML('idle')}</span></td>
+  </tr>`;
+}
+
+function renderAllFields(){
+  document.getElementById('tbl-baseline').innerHTML = FIELDS.filter(f=>f.section==='baseline').map(renderField).join('');
+  document.getElementById('tbl-distance').innerHTML = FIELDS.filter(f=>f.section==='distance').map(renderField).join('');
+  document.getElementById('tbl-near').innerHTML      = FIELDS.filter(f=>f.section==='near').map(renderField).join('');
+}
+renderAllFields();
+
+/* ---------------------------------------------------------------------
+   2b. CLINICAL REFERENCE TOOLTIPS (#4 / #5 / #6)
+   A single shared popover (see #tooltipPopover, a body-level element)
+   is repositioned and re-filled for whichever info icon is active.
+   Interaction model:
+     - hover / keyboard focus  -> shows while the icon is hovered/focused
+     - click / tap             -> "pins" the tooltip open (mobile-friendly);
+                                   a second click, an outside click, or a
+                                   scroll/resize closes it
+------------------------------------------------------------------- */
+const TOOLTIP_CONTENT = {
+  ret4: `
+    <p class="tt-head">#4 Static Retinoscopy</p>
+    <dl>
+      <dt>Baseline</dt><dd>Net finding (Gross &minus; working&#8209;distance lens)</dd>
+      <dt>Expected</dt><dd>Net #4 is +0.50&nbsp;D over Subjective (#7)</dd>
+      <dt>High</dt><dd class="tt-high">&gt; +0.50&nbsp;D over #7 &mdash; latent hyperopia, ciliary tonus rejection, pseudomyopia</dd>
+      <dt>Low</dt><dd class="tt-low">&lt; +0.50&nbsp;D over #7 &mdash; accommodative spasm, uncompensated near strain</dd>
+    </dl>`,
+  ret5: `
+    <p class="tt-head">#5 Dynamic Retinoscopy &mdash; 50 cm (High Neutral)</p>
+    <dl>
+      <dt>Target</dt><dd>Fixation grid at 50 cm</dd>
+      <dt>Expected</dt><dd>Gross power +0.75 to +1.00&nbsp;D over Net #4</dd>
+      <dt>High</dt><dd class="tt-high">&gt; +1.00&nbsp;D over Net #4 &mdash; hallmark of Type B accommodative fatigue, ready acceptance of near plus</dd>
+      <dt>Low</dt><dd class="tt-low">&lt; +0.75&nbsp;D over Net #4 &mdash; accommodative excess, ciliary hyper-reactivity</dd>
+    </dl>`,
+  ret6: `
+    <p class="tt-head">#6 Dynamic Retinoscopy &mdash; 1 m (MEM / Low Neutral)</p>
+    <dl>
+      <dt>Expected</dt><dd>+0.25 to +0.50&nbsp;D lag of accommodation</dd>
+      <dt>High</dt><dd class="tt-high">&gt; +0.75&nbsp;D lag &mdash; high lag, accommodative insufficiency</dd>
+      <dt>Low</dt><dd class="tt-low">Plano, lead, or minus &mdash; accommodative lead / spasm</dd>
+    </dl>`
+};
+
+(function setupTooltips(){
+  const popover = document.getElementById('tooltipPopover');
+  let pinnedId = null;
+  let activeIcon = null;
+
+  function positionPopover(icon){
+    const r = icon.getBoundingClientRect();
+    const margin = 10;
+    // Measure with the popover already visible (opacity is CSS-driven,
+    // so geometry is available regardless of the 'visible' class).
+    const pw = popover.offsetWidth, ph = popover.offsetHeight;
+    let left = r.left + r.width/2 - pw/2;
+    let top  = r.bottom + 8;
+    if (left < margin) left = margin;
+    if (left + pw > window.innerWidth - margin) left = window.innerWidth - margin - pw;
+    if (top + ph > window.innerHeight - margin){
+      top = r.top - ph - 8; // flip above the icon if it would overflow the bottom
+      if (top < margin) top = margin;
+    }
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+  }
+
+  function showTooltip(icon, id){
+    activeIcon = icon;
+    popover.innerHTML = TOOLTIP_CONTENT[id] || '';
+    popover.classList.add('visible');
+    positionPopover(icon);
+    icon.setAttribute('aria-expanded', 'true');
+  }
+  function hideTooltip(){
+    popover.classList.remove('visible');
+    if (activeIcon) activeIcon.setAttribute('aria-expanded', 'false');
+    activeIcon = null;
+  }
+
+  document.addEventListener('mouseover', (e) => {
+    const icon = e.target.closest('.info-icon');
+    if (icon) showTooltip(icon, icon.dataset.tooltipFor);
+  });
+  document.addEventListener('mouseout', (e) => {
+    const icon = e.target.closest('.info-icon');
+    if (icon && pinnedId !== icon.dataset.tooltipFor) hideTooltip();
+  });
+  document.addEventListener('focusin', (e) => {
+    const icon = e.target.closest('.info-icon');
+    if (icon) showTooltip(icon, icon.dataset.tooltipFor);
+  });
+  document.addEventListener('focusout', (e) => {
+    const icon = e.target.closest('.info-icon');
+    if (icon && pinnedId !== icon.dataset.tooltipFor) hideTooltip();
+  });
+  document.addEventListener('click', (e) => {
+    const icon = e.target.closest('.info-icon');
+    if (icon){
+      e.preventDefault();
+      e.stopPropagation();
+      const id = icon.dataset.tooltipFor;
+      if (pinnedId === id){ pinnedId = null; hideTooltip(); }
+      else { pinnedId = id; showTooltip(icon, id); }
+      return;
+    }
+    if (pinnedId && !e.target.closest('.tooltip-card')){
+      pinnedId = null; hideTooltip();
+    }
+  });
+  window.addEventListener('scroll', () => { pinnedId = null; hideTooltip(); }, {passive:true});
+  window.addEventListener('resize', () => { pinnedId = null; hideTooltip(); });
+})();
+
+/* ---------------------------------------------------------------------
+   3. LIVE INPUT HANDLING
+------------------------------------------------------------------- */
+function collectAndEvaluate(){
+  FIELDS.forEach(f => {
+    let val;
+    if (f.kind === 'phoria'){
+      const el = document.querySelector(`[data-signed="${f.id}"]`);
+      val = el && el.value !== '' ? parseFloat(el.value) : null;
+      if (val !== null && isNaN(val)) val = null;
+    } else {
+      const el = document.querySelector(`[data-num="${f.id}"]`);
+      val = el && el.value !== '' ? parseFloat(el.value) : null;
+      if (val !== null && isNaN(val)) val = null;
+    }
+    STATE[f.id] = val;
+  });
+
+  // Second pass: evaluate (some evaluators depend on other STATE values, e.g. #5 needs #4)
+  FIELDS.forEach(f => {
+    const result = f.evaluate(STATE[f.id]);
+    FLAGS[f.id] = result;
+    const badgeEl = document.getElementById(`badge-${f.id}`);
+    if (badgeEl) badgeEl.innerHTML = badgeHTML(result.status, result.note);
+
+    if (f.kind === 'phoria'){
+      const previewEl = document.getElementById(`preview-${f.id}`);
+      if (previewEl){
+        const p = formatPhoriaPreview(STATE[f.id]);
+        previewEl.textContent = p.text;
+        previewEl.className = `phoria-preview ${p.cls}`;
+      }
+    }
+
+    // Real-time clinical interpretation caption for #4/#5/#6
+    if (f.hasInterp){
+      const interpEl = document.getElementById(`interp-${f.id}`);
+      if (interpEl){
+        const caption = f.interpretation ? f.interpretation(result.status) : '';
+        interpEl.textContent = caption || '—';
+        interpEl.className = `interp-tag ${result.status}`;
+      }
+    }
+  });
+
+  computeGradientACA();
+  computeCrossCylShift();
+  computeHofstetter();
+  runCaseChaining();
+}
+
+['tbl-baseline','tbl-distance','tbl-near'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', collectAndEvaluate);
+  el.addEventListener('change', collectAndEvaluate);
+});
+
+/* ---------------------------------------------------------------------
+   4. DIAGNOSTIC CALCULATIONS
+------------------------------------------------------------------- */
+let GRADIENT_ACA = null;
+
+function computeGradientACA(){
+  const p1 = STATE.n13b, p2 = STATE.n13b1;
+  const valueEl = document.getElementById('acaValue');
+  const labelEl = document.getElementById('acaLabel');
+
+  if (p1 === null || p2 === null || isNaN(p1) || isNaN(p2)){
+    GRADIENT_ACA = null;
+    valueEl.textContent = '—';
+    labelEl.textContent = 'Enter #13b and #13b +1.00D phorias to calculate';
+    drawGauge(null);
+    return;
+  }
+  // Unified signed axis: Gradient AC/A = Phoria(#13b+1.00) − Phoria(#13b).
+  // Because Exo is positive and Eso is negative throughout, plain
+  // subtraction already implements "subtract like phorias, add unlike
+  // phorias" — e.g. (+10) − (+6) = 4.0, and (+3) − (−2) = 5.0.
+  const aca = p2 - p1;
+  GRADIENT_ACA = aca;
+  valueEl.textContent = `${fmt(aca,1)} : 1`;
+  let interp;
+  if (aca < 3)      interp = 'Low AC/A ratio (expected 3:1–5:1)';
+  else if (aca > 5) interp = 'High AC/A ratio (expected 3:1–5:1)';
+  else              interp = 'Within OEP expected range (3:1–5:1)';
+  labelEl.textContent = interp;
+  drawGauge(aca);
+}
+
+function computeCrossCylShift(){
+  const a = STATE.n15a, b = STATE.n15b;
+  const valueEl = document.getElementById('shiftValue');
+  const labelEl = document.getElementById('shiftLabel');
+  const fillEl  = document.getElementById('shiftFill');
+
+  if (a === null || b === null || isNaN(a) || isNaN(b)){
+    valueEl.textContent = '—';
+    labelEl.textContent = 'Enter #15a and #15b to calculate the shift direction';
+    fillEl.style.width = '0%';
+    fillEl.style.left = '50%';
+    return;
+  }
+  // ΔShift = Phoria(#15a) − Phoria(#15b). Positive = shift toward Exo,
+  // negative = shift toward Eso, on the same signed axis.
+  const shift = a - b;
+  valueEl.textContent = `${shift > 0 ? '+' : ''}${fmt(shift,1)}Δ`;
+  labelEl.textContent = shift === 0
+    ? 'No measurable shift between #15a and #15b'
+    : shift > 0
+      ? `Shift toward Exo (${fmt(Math.abs(shift),1)}Δ)`
+      : `Shift toward Eso (${fmt(Math.abs(shift),1)}Δ)`;
+
+  // Visual bar: fills from the centre (0) toward the shift direction.
+  const maxRange = 6; // Δ, for scaling the visual track
+  const pct = Math.max(-1, Math.min(1, shift / maxRange)) * 50; // -50..+50
+  if (pct >= 0){
+    fillEl.style.left = '50%';
+    fillEl.style.width = `${pct}%`;
+  } else {
+    fillEl.style.left = `${50 + pct}%`;
+    fillEl.style.width = `${-pct}%`;
+  }
+}
+
+// Minimal inline SVG dial for the Gradient AC/A ratio.
+function drawGauge(value){
+  const svg = document.getElementById('acaGauge');
+  const cx = 110, cy = 110, r = 90;
+  const minV = 0, maxV = 8;
+  const angleFor = (v) => Math.PI - (Math.min(Math.max(v,minV),maxV) - minV) / (maxV-minV) * Math.PI;
+  const point = (v, rad=r) => {
+    const a = angleFor(v);
+    return [cx + rad*Math.cos(a), cy - rad*Math.sin(a)];
+  };
+  const arcPath = (fromV, toV, rad) => {
+    const [x1,y1] = point(fromV, rad), [x2,y2] = point(toV, rad);
+    const large = (toV-fromV) > (maxV-minV)/2 ? 1 : 0;
+    return `M ${x1} ${y1} A ${rad} ${rad} 0 ${large} 1 ${x2} ${y2}`;
+  };
+  let needle = '';
+  if (value !== null && !isNaN(value)){
+    const [nx, ny] = point(value, r-14);
+    needle = `<line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#16233F" stroke-width="3" stroke-linecap="round"/>
+               <circle cx="${cx}" cy="${cy}" r="5" fill="#A8792B"/>`;
+  }
+  svg.innerHTML = `
+    <path d="${arcPath(minV,maxV,r)}" fill="none" stroke="#EBEDE6" stroke-width="16"/>
+    <path d="${arcPath(3,5,r)}" fill="none" stroke="#CADFCE" stroke-width="16"/>
+    <path d="${arcPath(minV,3,r)}" fill="none" stroke="#E2ECF3" stroke-width="16"/>
+    <path d="${arcPath(5,maxV,r)}" fill="none" stroke="#F5E3E1" stroke-width="16"/>
+    ${needle}
+    <text x="${cx}" y="128" text-anchor="middle" font-size="10" fill="#4B5670" font-family="ui-monospace,monospace">0</text>
+    <text x="${cx-r}" y="${cy+14}" text-anchor="middle" font-size="10" fill="#4B5670" font-family="ui-monospace,monospace">0</text>
+    <text x="${cx+r}" y="${cy+14}" text-anchor="middle" font-size="10" fill="#4B5670" font-family="ui-monospace,monospace">8</text>
+  `;
+}
+drawGauge(null);
+
+function computeHofstetter(){
+  const age = STATE.age;
+  const measured = STATE.n19;
+  document.getElementById('hofAge').textContent = age===null||isNaN(age) ? '—' : `${age} yrs`;
+  if (age===null||isNaN(age)){
+    document.getElementById('hofMin').textContent = '—';
+    document.getElementById('hofAvg').textContent = '—';
+    document.getElementById('hofMeasured').textContent = measured===null?'—':`${fmt(measured)}D`;
+    document.getElementById('hofBadge').innerHTML = badgeHTML('idle');
+    return;
+  }
+  const min = 15 - 0.25*age, avg = 18.5 - 0.30*age;
+  document.getElementById('hofMin').textContent = `${fmt(min,1)}D`;
+  document.getElementById('hofAvg').textContent = `${fmt(avg,1)}D`;
+  document.getElementById('hofMeasured').textContent = measured===null||isNaN(measured) ? '—' : `${fmt(measured)}D`;
+  document.getElementById('hofBadge').innerHTML = FLAGS.n19 ? badgeHTML(FLAGS.n19.status, FLAGS.n19.note) : badgeHTML('idle');
+}
+
+/* ---------------------------------------------------------------------
+   5. CASE CHAINING & SYNDROME CLASSIFICATION
+------------------------------------------------------------------- */
+function runCaseChaining(){
+  const highChips = [], lowChips = [];
+  FIELDS.forEach(f => {
+    const flag = FLAGS[f.id];
+    if (!flag) return;
+    if (flag.status === 'high') highChips.push(`${f.oep} ${f.label}`);
+    if (flag.status === 'low')  lowChips.push(`${f.oep} ${f.label}`);
+  });
+
+  const highEl = document.getElementById('chainHigh');
+  const lowEl  = document.getElementById('chainLow');
+  highEl.innerHTML = highChips.length
+    ? highChips.map(c => `<span class="chain-chip high">${c}</span>`).join('')
+    : '<span class="chain-empty">No high findings encoded yet</span>';
+  lowEl.innerHTML = lowChips.length
+    ? lowChips.map(c => `<span class="chain-chip low">${c}</span>`).join('')
+    : '<span class="chain-empty">No low findings encoded yet</span>';
+
+  classifySyndrome();
+}
+
+const stat = (id) => FLAGS[id] ? FLAGS[id].status : 'idle';
+const has = (id, ...ok) => ok.includes(stat(id));
+
+function classifySyndrome(){
+  const tagEl = document.getElementById('syndromeTag');
+  const titleEl = document.getElementById('syndromeTitle');
+  const descEl = document.getElementById('syndromeDesc');
+  const mgmtEl = document.getElementById('mgmtList');
+
+  const results = [];
+
+  // --- Type B1: Accommodative Fatigue, Uncompensated -------------
+  if (stat('ret5')==='high' && has('d9','low','idle') && stat('d11break')==='high' && stat('n16bbreak')==='low' && stat('n20')==='low'){
+    results.push({
+      tag:'TYPE B1', title:'Accommodative Fatigue — Uncompensated',
+      desc:'High plus finding at #5 with an absent/low base-out reserve at distance (#9), an elevated base-in reserve at distance (#11) compensating for the fatigue, but reduced near base-out reserve (#16b) and reduced PRA (#20) show the compensation is not fully carried into the near system.',
+      mgmt:['Near plus relieving addition, reassessed against #16b/#20 response','Accommodative vision therapy (facility &amp; sustained plus acceptance)','Re-chain findings after 4–6 weeks of therapy to confirm shift out of Low #16b/#20']
+    });
+  }
+  // --- Type B2: Accommodative Fatigue, Embedded/Compensated -------
+  if (stat('ret5')==='high' && has('d9','low','idle') && stat('d11break')==='low' && stat('n16bbreak')==='low' && stat('n20')==='low'){
+    results.push({
+      tag:'TYPE B2', title:'Accommodative Fatigue — Embedded / Compensated',
+      desc:'Same accommodative fatigue signature as Type B1 (#5 high, #9 low/absent) but the distance base-in reserve (#11) has also dropped — the fatigue is now embedded in both accommodative and vergence systems rather than being locally compensated.',
+      mgmt:['Near plus relieving addition with staged reduction plan','Full vision-therapy sequence: accommodative facility + fusional vergence ranges','Monitor #11 and #16b jointly; embedded cases progress more slowly than B1']
+    });
+  }
+  // --- Type C: Convergence Exhaustion / Adductive Problem ---------
+  const imbalanced16b = (() => {
+    if (STATE.n16bbreak===null || STATE.n16brec===null || isNaN(STATE.n16bbreak) || isNaN(STATE.n16brec)) return false;
+    return (STATE.n16bbreak - STATE.n16brec) > 10;
+  })();
+  if (stat('d10break')==='low' && stat('d11break')==='low' && stat('n17bbreak')==='low' && (stat('n16bbreak')==='low' || imbalanced16b)){
+    results.push({
+      tag:'TYPE C', title:'Convergence Exhaustion / Adductive Problem',
+      desc:'Both distance reserves (#10, #11) and the near base-in reserve (#17b) are reduced, with the near base-out reserve (#16b) either low or badly imbalanced between break and recovery — a global adductive fatigue pattern rather than an isolated distance or near finding.',
+      mgmt:['Fusional vergence vision therapy prioritizing base-in ranges','Consider base-in relieving prism if therapy response is slow','Screen for binocular fatigue symptoms (asthenopia, diplopia) under sustained near tasks']
+    });
+  }
+  // --- Convergence Insufficiency vs Convergence Excess (AC/A-based)
+  // On the unified axis, "very exo at near" is a large POSITIVE #13b;
+  // "near ortho / eso" is a small or negative #13b.
+  if (GRADIENT_ACA !== null){
+    const nearPhoria = STATE.n13b;
+    if (GRADIENT_ACA < 3 && nearPhoria !== null && nearPhoria > 8){
+      results.push({
+        tag:'CI', title:'Convergence Insufficiency',
+        desc:`Low Gradient AC/A (${fmt(GRADIENT_ACA,1)}:1) combined with exophoria at near beyond the OEP average (#13b = +${fmt(nearPhoria,1)}Δ) is the classic convergence-insufficiency signature: the accommodative system is not driving enough convergence to hold the near phoria in range.`,
+        mgmt:['Base-in fusional vergence therapy (push-up / prism bar protocols)','Near plus is usually NOT indicated — it would further reduce accommodative convergence drive','Home vision therapy with pencil push-ups or Brock string as adjunct']
+      });
+    }
+    if (GRADIENT_ACA > 5 && nearPhoria !== null && nearPhoria <= 4){
+      results.push({
+        tag:'CE', title:'Convergence Excess',
+        desc:`High Gradient AC/A (${fmt(GRADIENT_ACA,1)}:1) with near phoria at or near orthophoria/esophoria (#13b = ${nearPhoria>0?'+':''}${fmt(nearPhoria,1)}Δ) indicates over-convergence relative to accommodation — a convergence-excess pattern.`,
+        mgmt:['Near plus relieving addition to reduce accommodative convergence load','Base-out ranges therapy only if reserves remain asymmetric after the add','Re-check #13b and Gradient AC/A after the relieving prescription is dispensed']
+      });
+    }
+  }
+
+  if (results.length === 0){
+    tagEl.textContent = 'AWAITING DATA';
+    titleEl.textContent = 'Insufficient findings for classification';
+    descEl.textContent = 'Encode distance and near vergence reserves, accommodative findings, and the gradient AC/A to activate the syndrome-matching rules for Types B1, B2, C, and Convergence Insufficiency / Excess.';
+    mgmtEl.innerHTML = '';
+    const extras = document.querySelectorAll('#syndromeBox .syndrome-result');
+    extras.forEach(e => e.remove());
+    return;
+  }
+
+  const extras = document.querySelectorAll('#syndromeBox .syndrome-result');
+  extras.forEach(e => e.remove());
+
+  const primary = results[0];
+  tagEl.textContent = primary.tag;
+  titleEl.textContent = primary.title;
+  descEl.innerHTML = primary.desc;
+  mgmtEl.innerHTML = primary.mgmt.map(m => `<li>${m}</li>`).join('');
+
+  if (results.length > 1){
+    const extraHTML = results.slice(1).map(r => `
+      <div class="syndrome-result" style="margin-top:10px;background:#fff;">
+        <span class="type-tag" style="background:var(--brass);color:#231A0B;">${r.tag}</span>
+        <h3 style="font-size:14.5px;">${r.title}</h3>
+        <p>${r.desc}</p>
+        <ul class="mgmt-list">${r.mgmt.map(m=>`<li>${m}</li>`).join('')}</ul>
+      </div>`).join('');
+    document.getElementById('syndromeBox').insertAdjacentHTML('beforeend', extraHTML);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   6. PRESET PATIENTS (B1 / B2 / C) + RESET
+   All phoria values are now plain signed numbers on the Exo(+)/Eso(−)
+   axis — no direction field to populate separately.
+------------------------------------------------------------------- */
+const PRESET_B1 = {
+  age:24, ret4:-0.25, ret5:1.25, ret6:0.85, sub7:-0.75,
+  d8:1.0, d9:5, d10break:14, d10rec:7, d11break:16, d11rec:8,
+  n13b:6.0, n13b1:9.0, n14a:0.50, n14b:0.50, n15a:6.0, n15b:6.0,
+  n16a:12, n16bbreak:15, n16brec:9, n17a:12, n17bbreak:18, n17brec:14,
+  n19:8.0, n20:-1.50, n21:1.75
+};
+
+const PRESET_B2 = {
+  age:24, ret4:-0.25, ret5:1.25, ret6:0.85, sub7:-0.75,
+  d8:1.0, d9:5, d10break:14, d10rec:7, d11break:6, d11rec:3,
+  n13b:6.0, n13b1:9.0, n14a:0.50, n14b:0.50, n15a:6.0, n15b:6.0,
+  n16a:12, n16bbreak:15, n16brec:9, n17a:12, n17bbreak:18, n17brec:14,
+  n19:8.0, n20:-1.50, n21:1.75
+};
+
+const PRESET_C = {
+  age:24, ret4:0.00, ret5:0.85, ret6:0.35, sub7:-0.50,
+  d8:0.25, d9:8, d10break:14, d10rec:8, d11break:6, d11rec:3,
+  n13b:6.0, n13b1:9.5, n14a:0.50, n14b:0.50, n15a:6.0, n15b:6.0,
+  n16a:14, n16bbreak:15, n16brec:9, n17a:10, n17bbreak:16, n17brec:10,
+  n19:8.0, n20:-2.75, n21:2.25
+};
+
+function applyPatient(data){
+  FIELDS.forEach(f => {
+    if (f.kind === 'phoria'){
+      const el = document.querySelector(`[data-signed="${f.id}"]`);
+      el.value = (data[f.id] !== undefined) ? data[f.id] : '';
+    } else {
+      const el = document.querySelector(`[data-num="${f.id}"]`);
+      el.value = (data[f.id] !== undefined) ? data[f.id] : '';
+    }
+  });
+  collectAndEvaluate();
+}
+
+function clearPatient(){
+  FIELDS.forEach(f => {
+    if (f.kind === 'phoria'){
+      document.querySelector(`[data-signed="${f.id}"]`).value = '';
+    } else {
+      document.querySelector(`[data-num="${f.id}"]`).value = '';
+    }
+  });
+  collectAndEvaluate();
+}
+
+document.getElementById('btnB1').addEventListener('click', () => applyPatient(PRESET_B1));
+document.getElementById('btnB2').addEventListener('click', () => applyPatient(PRESET_B2));
+document.getElementById('btnC').addEventListener('click', () => applyPatient(PRESET_C));
+document.getElementById('resetBtn').addEventListener('click', clearPatient);
+
+// initial pass so all badges/previews render as idle/consistent
+collectAndEvaluate();
+
+/* ---------------------------------------------------------------------
+   7. PWA BOOTSTRAP — inline manifest + inline service worker
+------------------------------------------------------------------- */
+(function setupPWA(){
+  const manifest = {
+    name: "OEP Visual Analysis Assistant",
+    short_name: "OEP Assistant",
+    description: "Manas 21-Point Visual Analysis & Case Chaining decision-support tool.",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#F5F6F2",
+    theme_color: "#16233F",
+    icons: [
+      { src: makeIconDataURI(192), sizes: "192x192", type: "image/svg+xml" },
+      { src: makeIconDataURI(512), sizes: "512x512", type: "image/svg+xml" }
+    ]
+  };
+  function makeIconDataURI(size){
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#16233F"/>
+      <circle cx="50" cy="50" r="34" fill="none" stroke="#A8792B" stroke-width="4"/>
+      <text x="50" y="58" font-family="Georgia,serif" font-size="28" fill="#F5F6F2" text-anchor="middle">21</text>
+    </svg>`;
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+  }
+  const manifestBlob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  document.getElementById('manifestLink').href = URL.createObjectURL(manifestBlob);
+
+  const swSource = `
+    const CACHE = 'oep-assistant-v2';
+    self.addEventListener('install', (evt) => {
+      self.skipWaiting();
+      evt.waitUntil(
+        caches.open(CACHE).then((cache) => cache.addAll(['./']))
+        .catch(() => {})
+      );
+    });
+    self.addEventListener('activate', (evt) => { evt.waitUntil(self.clients.claim()); });
+    self.addEventListener('fetch', (evt) => {
+      evt.respondWith(
+        caches.match(evt.request).then((cached) => cached || fetch(evt.request).catch(() => cached))
+      );
+    });
+  `;
+  const swBlob = new Blob([swSource], {type:'text/javascript'});
+  const swURL = URL.createObjectURL(swBlob);
+
+  const statusEl = document.getElementById('pwaStatus');
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.register(swURL)
+      .then(() => { statusEl.innerHTML = '<span class="pwa-dot"></span> Offline&#8209;ready'; })
+      .catch(() => { statusEl.innerHTML = '<span class="pwa-dot" style="background:#C68A2E"></span> Offline mode unavailable'; });
+  } else {
+    statusEl.innerHTML = '<span class="pwa-dot" style="background:#C68A2E"></span> Service workers unsupported';
+  }
+
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.hidden = false;
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.hidden = true;
+  });
+  window.addEventListener('appinstalled', () => { installBtn.hidden = true; });
+})();
+</script>
+</body>
+</html>

@@ -27,6 +27,7 @@
     <button class="btn-preset" id="btnB1">Sample B1 Case</button>
     <button class="btn-preset" id="btnB2">Sample B2 Case</button>
     <button class="btn-preset" id="btnC">Sample C Case</button>
+    <button class="btn-preset" id="btnVT12">Sample VT 12 Case</button>
     <button class="btn-reset" id="resetBtn">Reset</button>
   </div>
 </header>
@@ -36,7 +37,7 @@
   <div class="app-intro">
     <div>
       <p class="eyebrow">Chairside decision support &mdash; mock-up</p>
-      <p>Enter encoded findings below. Every value is checked against the OEP Table of Expecteds in real time, and the Case Chaining engine assembles the High/Low diagnostic fraction as you type. Phorias now use a single signed number line: <strong>Exo is positive, Ortho is zero, Eso is negative.</strong></p>
+      <p>Enter encoded findings below. Every value is checked against the OEP Table of Expecteds in real time, and the Case Chaining engine assembles the High/Low diagnostic fraction as you type. Horizontal phorias use signed notation (<strong>Exo (+), Ortho (0), Eso (&minus;)</strong>), while VT #12 vertical phorias use signed vertical notation (<strong>Right Hyper (+), Ortho (0), Left Hyper (&minus;)</strong>).</p>
     </div>
   </div>
 
@@ -77,6 +78,27 @@
     <table class="field-table">
       <thead><tr><th style="width:70px">Pt.</th><th>Finding</th><th>Encoded</th><th>Expected</th><th style="width:90px">Status</th></tr></thead>
       <tbody id="tbl-distance"></tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       SECTION: VERTICAL TESTS (VT #12) — SEPARATE ASSESSMENT
+  ============================================================= -->
+  <section class="card card-vertical-section" id="card-vt12">
+    <div class="card-head">
+      <div>
+        <h2>Vertical Balance &amp; Ductions <span class="sub">(VT #12 &middot; 6&nbsp;m)</span></h2>
+        <p class="section-tagline">Point #12 &mdash; Non-accommodative vertical alignment &amp; fusional duction reserves</p>
+      </div>
+      <span class="sub section-badge">VT #12 Isolation</span>
+    </div>
+    <div class="vertical-intro-banner">
+      <span class="vt-pill">Separate Assessment</span>
+      <p>VT #12 evaluates vertical phoria and vertical ductions at distance. Vertical deviations are non-accommodative and act as mechanical/sensory obstacles to horizontal fusion when uncompensated.</p>
+    </div>
+    <table class="field-table">
+      <thead><tr><th style="width:70px">Pt.</th><th>Finding</th><th>Encoded</th><th>Expected</th><th style="width:90px">Status</th></tr></thead>
+      <tbody id="tbl-vt12"></tbody>
     </table>
   </section>
 
@@ -124,6 +146,17 @@
         <div class="kv-row"><span class="k">Average <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft)">(18.5&minus;0.30&middot;age)</span></span><span class="v" id="hofAvg">&mdash;</span></div>
         <div class="kv-row"><span class="k">Measured (#19)</span><span class="v" id="hofMeasured">&mdash;</span></div>
         <div class="kv-row"><span class="k">Interpretation</span><span class="v" id="hofBadge">&mdash;</span></div>
+      </div>
+    </div>
+
+    <div class="card" id="card-vt12-diag">
+      <div class="card-head"><h2>Vertical Reserve Analyzer</h2><span class="sub">Point #12 &middot; Sheard's</span></div>
+      <div style="padding:16px 18px;">
+        <div class="kv-row"><span class="k">Vertical Phoria (#12a)</span><span class="v" id="vtPhoriaVal">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Compensating Reserve</span><span class="v" id="vtCompReserveVal">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Sheard's Demand</span><span class="v" id="vtSheardDemandVal">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Suggested Relieving Prism</span><span class="v" id="vtPrismVal" style="color:var(--brass);">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Vertical Compensation</span><span class="v" id="vtStatusBadge">&mdash;</span></div>
       </div>
     </div>
   </section>

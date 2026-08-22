@@ -798,7 +798,106 @@ footer {
   font-family: var(--font-mono);
 }
 
+/* ---------- Vertical Tests (VT #12) Section ---------- */
+.card-vertical-section {
+  border-left: 4px solid var(--brass);
+  background: #FCFCFA;
+}
+
+.section-tagline {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  font-weight: normal;
+}
+
+.section-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--brass-soft);
+  border: 1px solid rgba(168, 121, 43, 0.4);
+  color: #5D3E0A;
+  padding: 3px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.vertical-intro-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.vertical-intro-banner p {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.vt-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  background: var(--brass);
+  color: #231A0B;
+  padding: 2px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex: none;
+}
+
+.phoria-preview.r-hyper {
+  color: var(--high);
+  font-weight: 600;
+}
+
+.phoria-preview.l-hyper {
+  color: var(--low);
+  font-weight: 600;
+}
+
+/* Cross-Meridian Correlation Callout */
+.cross-meridian-box {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: #FFF8EB;
+  border: 1px solid #E9D6A9;
+  border-left: 4px solid var(--amber);
+  border-radius: 4px;
+}
+
+.cross-meridian-box .cm-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #694406;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cross-meridian-box p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #4A3B1F;
+  line-height: 1.45;
+}
+
 @media (max-width: 640px) {
+  .vertical-intro-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
   .field-table thead {
     display: none;
   }
@@ -829,3 +928,4 @@ footer {
     margin-top: 2px;
   }
 }
+

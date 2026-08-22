@@ -154,6 +154,48 @@ const FIELDS = [
     evaluate: (v) => reserveStatus(v, 5), normText: () => '5Δ'
   },
 
+  // ---- Vertical tests (Distance / 6m) — Point #12 (VT #12) --------
+  {
+    id: 'vt12a', section: 'vt12', oep: '#12a', label: 'Vertical Phoria', sub: 'Von Graefe / Maddox, distance (6 m)', kind: 'phoria', phoriaType: 'vertical', unit: 'Δ', step: '0.5', placeholder: 'e.g., +1.5 or -1.0',
+    hasTooltip: true, hasInterp: true,
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v === 0) return { status: 'wnl', note: 'meets Ortho (0Δ)' };
+      if (v > 0) return { status: 'high', note: `+${fmt(v, 1)}Δ Right Hyper (RHP)` };
+      return { status: 'low', note: `${fmt(Math.abs(v), 1)}Δ Left Hyper (LHP)` };
+    },
+    normText: () => 'Ortho (0.0Δ)',
+    interpretation: (status) => ({
+      high: 'Right Hyperphoria (OD visual axis elevated)',
+      low: 'Left Hyperphoria (OS visual axis elevated)',
+      wnl: 'Normal Vertical Orthophoria'
+    }[status] || '')
+  },
+
+  {
+    id: 'vt12b_supra_break', section: 'vt12', oep: '#12b', label: 'Right Supraduction Break', sub: 'BD OD / BU OS to break', kind: 'num', unit: 'Δ', step: '0.5', placeholder: 'e.g., 3.5',
+    hasTooltip: true, tooltipId: 'vt12b_supra',
+    evaluate: (v) => reserveStatus(v, 3), normText: () => '3.0–4.0Δ'
+  },
+
+  {
+    id: 'vt12b_supra_rec', section: 'vt12', oep: '#12b', label: 'Right Supraduction Recovery', sub: 'BD OD / BU OS recovery', kind: 'num', unit: 'Δ', step: '0.5', placeholder: 'e.g., 2.0',
+    hasTooltip: true, tooltipId: 'vt12b_supra',
+    evaluate: (v) => reserveStatus(v, 1.5), normText: () => '1.5–2.0Δ'
+  },
+
+  {
+    id: 'vt12b_infra_break', section: 'vt12', oep: '#12b', label: 'Right Infraduction Break', sub: 'BU OD / BD OS to break', kind: 'num', unit: 'Δ', step: '0.5', placeholder: 'e.g., 3.5',
+    hasTooltip: true, tooltipId: 'vt12b_infra',
+    evaluate: (v) => reserveStatus(v, 3), normText: () => '3.0–4.0Δ'
+  },
+
+  {
+    id: 'vt12b_infra_rec', section: 'vt12', oep: '#12b', label: 'Right Infraduction Recovery', sub: 'BU OD / BD OS recovery', kind: 'num', unit: 'Δ', step: '0.5', placeholder: 'e.g., 2.0',
+    hasTooltip: true, tooltipId: 'vt12b_infra',
+    evaluate: (v) => reserveStatus(v, 1.5), normText: () => '1.5–2.0Δ'
+  },
+
   // ---- Nearpoint findings (40cm) — signed-axis phorias below --------
   {
     id: 'n13b', section: 'near', oep: '#13b', label: 'Induced Phoria', sub: 'Von Graefe, near', kind: 'phoria', unit: 'Δ',
@@ -258,31 +300,40 @@ function badgeHTML(status, note) {
 }
 
 // Translate a signed phoria coordinate into the clinical-format preview
-// string, e.g. -3 -> "3Δ Eso", +6 -> "6Δ Exo", 0 -> "Ortho".
-function formatPhoriaPreview(v) {
+// string:
+// Horizontal: -3 -> "3Δ Eso", +6 -> "6Δ Exo", 0 -> "Ortho"
+// Vertical (VT #12): +1.5 -> "1.5Δ R. Hyper", -1.0 -> "1.0Δ L. Hyper", 0 -> "Ortho"
+function formatPhoriaPreview(v, phoriaType = 'horizontal') {
   if (v === null || v === '' || isNaN(v)) return { text: '—', cls: 'empty' };
   if (v === 0) return { text: 'Ortho', cls: 'ortho' };
+  if (phoriaType === 'vertical') {
+    if (v > 0) return { text: `${fmt(Math.abs(v), 1)}Δ R. Hyper`, cls: 'r-hyper' };
+    return { text: `${fmt(Math.abs(v), 1)}Δ L. Hyper`, cls: 'l-hyper' };
+  }
   if (v > 0)   return { text: `${fmt(Math.abs(v), 1)}Δ Exo`, cls: 'exo' };
   return { text: `${fmt(Math.abs(v), 1)}Δ Eso`, cls: 'eso' };
 }
 
 function renderField(f) {
+  const tooltipTargetId = f.tooltipId || f.id;
   const infoIconHTML = f.hasTooltip
-    ? `<button type="button" class="info-icon" data-tooltip-for="${f.id}" aria-label="Clinical reference for ${f.label}" aria-expanded="false">ⓘ</button>`
+    ? `<button type="button" class="info-icon" data-tooltip-for="${tooltipTargetId}" aria-label="Clinical reference for ${f.label}" aria-expanded="false">ⓘ</button>`
     : '';
 
   const interpHTML = f.hasInterp
     ? `<div class="interp-tag idle" id="interp-${f.id}">—</div>`
     : '';
 
+  const placeholder = f.placeholder || (f.kind === 'phoria' ? 'e.g., +6 or -2' : '—');
+
   const controlHTML = f.kind === 'phoria'
     ? `<div class="entry">
-         <input type="number" step="0.5" class="signed-input" data-signed="${f.id}" placeholder="e.g., +6 or -2">
+         <input type="number" step="${f.step || '0.5'}" class="signed-input" data-signed="${f.id}" placeholder="${placeholder}">
          <span class="unit">${f.unit}</span>
        </div>
        <div class="phoria-preview empty" id="preview-${f.id}">—</div>`
     : `<div class="entry">
-         <input type="number" step="${f.step || '0.25'}" data-num="${f.id}" placeholder="—">
+         <input type="number" step="${f.step || '0.25'}" data-num="${f.id}" placeholder="${placeholder}">
          <span class="unit">${f.unit}</span>
        </div>${interpHTML}`;
 
@@ -298,15 +349,17 @@ function renderField(f) {
 function renderAllFields() {
   const baseEl = document.getElementById('tbl-baseline');
   const distEl = document.getElementById('tbl-distance');
+  const vt12El = document.getElementById('tbl-vt12');
   const nearEl = document.getElementById('tbl-near');
   if (baseEl) baseEl.innerHTML = FIELDS.filter(f => f.section === 'baseline').map(renderField).join('');
   if (distEl) distEl.innerHTML = FIELDS.filter(f => f.section === 'distance').map(renderField).join('');
+  if (vt12El) vt12El.innerHTML = FIELDS.filter(f => f.section === 'vt12').map(renderField).join('');
   if (nearEl) nearEl.innerHTML = FIELDS.filter(f => f.section === 'near').map(renderField).join('');
 }
 renderAllFields();
 
 /* ---------------------------------------------------------------------
-   2b. CLINICAL REFERENCE TOOLTIPS (#4 / #5 / #6)
+   2b. CLINICAL REFERENCE TOOLTIPS (#4 / #5 / #6 / VT #12)
    A single shared popover (see #tooltipPopover, a body-level element)
    is repositioned and re-filled for whichever info icon is active.
    Interaction model:
@@ -338,6 +391,28 @@ const TOOLTIP_CONTENT = {
       <dt>Expected</dt><dd>+0.25 to +0.50&nbsp;D lag of accommodation</dd>
       <dt>High</dt><dd class="tt-high">&gt; +0.75&nbsp;D lag &mdash; high lag, accommodative insufficiency</dd>
       <dt>Low</dt><dd class="tt-low">Plano, lead, or minus &mdash; accommodative lead / spasm</dd>
+    </dl>`,
+  vt12a: `
+    <p class="tt-head">#12a Distance Vertical Phoria (VT #12)</p>
+    <dl>
+      <dt>Target</dt><dd>Distance fixation (6 m / 20 ft), Von Graefe / Maddox rod</dd>
+      <dt>Axis</dt><dd>Positive (+) = Right Hyper (RHP), 0 = Ortho, Negative (&minus;) = Left Hyper (LHP)</dd>
+      <dt>Expected</dt><dd>Orthophoria (0.0&nbsp;&Delta;)</dd>
+      <dt>Significance</dt><dd>Non-accommodative vertical deviation. Even &le; 1&Delta; causes asthenopia and disrupts horizontal fusional adaptation.</dd>
+    </dl>`,
+  vt12b_supra: `
+    <p class="tt-head">#12b Right Supraduction (VT #12 Duction)</p>
+    <dl>
+      <dt>Prism</dt><dd>Base-Down OD / Base-Up OS to break &amp; recovery</dd>
+      <dt>Expected</dt><dd>Break 3.0–4.0&nbsp;&Delta; / Recovery 1.5–2.0&nbsp;&Delta;</dd>
+      <dt>Clinical Role</dt><dd>Compensating reserve for Left Hyperphoria (LHP). Low recovery signals vertical decompensation.</dd>
+    </dl>`,
+  vt12b_infra: `
+    <p class="tt-head">#12b Right Infraduction (VT #12 Duction)</p>
+    <dl>
+      <dt>Prism</dt><dd>Base-Up OD / Base-Down OS to break &amp; recovery</dd>
+      <dt>Expected</dt><dd>Break 3.0–4.0&nbsp;&Delta; / Recovery 1.5–2.0&nbsp;&Delta;</dd>
+      <dt>Clinical Role</dt><dd>Compensating reserve for Right Hyperphoria (RHP). Low recovery signals vertical decompensation.</dd>
     </dl>`
 };
 
@@ -444,13 +519,13 @@ function collectAndEvaluate() {
     if (f.kind === 'phoria') {
       const previewEl = document.getElementById(`preview-${f.id}`);
       if (previewEl) {
-        const p = formatPhoriaPreview(STATE[f.id]);
+        const p = formatPhoriaPreview(STATE[f.id], f.phoriaType || 'horizontal');
         previewEl.textContent = p.text;
         previewEl.className = `phoria-preview ${p.cls}`;
       }
     }
 
-    // Real-time clinical interpretation caption for #4/#5/#6
+    // Real-time clinical interpretation caption for #4/#5/#6/#12a
     if (f.hasInterp) {
       const interpEl = document.getElementById(`interp-${f.id}`);
       if (interpEl) {
@@ -464,10 +539,11 @@ function collectAndEvaluate() {
   computeGradientACA();
   computeCrossCylShift();
   computeHofstetter();
+  computeVerticalAnalysis();
   runCaseChaining();
 }
 
-['tbl-baseline', 'tbl-distance', 'tbl-near'].forEach(id => {
+['tbl-baseline', 'tbl-distance', 'tbl-vt12', 'tbl-near'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener('input', collectAndEvaluate);
@@ -599,6 +675,91 @@ function computeHofstetter() {
   badgeEl.innerHTML = FLAGS.n19 ? badgeHTML(FLAGS.n19.status, FLAGS.n19.note) : badgeHTML('idle');
 }
 
+function computeVerticalAnalysis() {
+  const phoria = STATE.vt12a;
+  const sBreak = STATE.vt12b_supra_break;
+  const sRec   = STATE.vt12b_supra_rec;
+  const iBreak = STATE.vt12b_infra_break;
+  const iRec   = STATE.vt12b_infra_rec;
+
+  const phoriaEl = document.getElementById('vtPhoriaVal');
+  const compEl   = document.getElementById('vtCompReserveVal');
+  const sheardEl = document.getElementById('vtSheardDemandVal');
+  const prismEl  = document.getElementById('vtPrismVal');
+  const badgeEl  = document.getElementById('vtStatusBadge');
+  if (!phoriaEl || !compEl || !sheardEl || !prismEl || !badgeEl) return;
+
+  if (phoria === null || isNaN(phoria)) {
+    phoriaEl.textContent = '—';
+    compEl.textContent = '—';
+    sheardEl.textContent = '—';
+    prismEl.textContent = '—';
+    badgeEl.innerHTML = badgeHTML('idle');
+    return;
+  }
+
+  if (phoria === 0) {
+    phoriaEl.textContent = '0.0Δ (Ortho)';
+    compEl.textContent = (sRec !== null || iRec !== null)
+      ? `Supra: ${sRec !== null ? fmt(sRec, 1) + 'Δ' : '—'} / Infra: ${iRec !== null ? fmt(iRec, 1) + 'Δ' : '—'}`
+      : 'Symmetric ductions';
+    sheardEl.textContent = 'No demand (0.0Δ)';
+    prismEl.textContent = 'None indicated';
+
+    if (sBreak !== null && iBreak !== null) {
+      const dBreak = Math.abs(sBreak - iBreak);
+      const dRec = (sRec !== null && iRec !== null) ? Math.abs(sRec - iRec) : 0;
+      if (dBreak >= 2.0 || dRec >= 1.5) {
+        badgeEl.innerHTML = badgeHTML('amber', 'Asymmetric ductions');
+      } else {
+        badgeEl.innerHTML = badgeHTML('wnl', 'Balanced Orthophoria');
+      }
+    } else {
+      badgeEl.innerHTML = badgeHTML('wnl', 'Orthophoria');
+    }
+    return;
+  }
+
+  const isRHP = phoria > 0;
+  const mag = Math.abs(phoria);
+  const phoriaLabel = isRHP ? `+${fmt(mag, 1)}Δ RHP` : `${fmt(mag, 1)}Δ LHP`;
+  phoriaEl.textContent = phoriaLabel;
+
+  // Compensating reserve:
+  // For RHP (+), compensating reserve is Right Infraduction
+  // For LHP (-), compensating reserve is Right Supraduction
+  const compRec = isRHP ? iRec : sRec;
+  const compBreak = isRHP ? iBreak : sBreak;
+  const compName = isRHP ? 'Right Infraduction' : 'Right Supraduction';
+
+  if (compRec === null || isNaN(compRec)) {
+    compEl.textContent = `Needs ${compName}`;
+    sheardEl.textContent = `Demand: ≥ ${fmt(2 * mag, 1)}Δ (2× phoria)`;
+    prismEl.textContent = 'Enter ductions to calculate';
+    badgeEl.innerHTML = badgeHTML('amber', 'Awaiting ductions');
+    return;
+  }
+
+  compEl.textContent = `${compName}: ${compBreak !== null ? fmt(compBreak, 1) : '—'} / ${fmt(compRec, 1)}Δ`;
+
+  // Sheard's criterion: Prism = (2 * Phoria - Compensating Reserve Recovery) / 3
+  const sheardPrism = (2 * mag - compRec) / 3;
+  sheardEl.textContent = `2×(${fmt(mag, 1)}) = ${fmt(2 * mag, 1)}Δ vs ${fmt(compRec, 1)}Δ rec`;
+
+  if (sheardPrism <= 0) {
+    prismEl.textContent = 'None (Compensated)';
+    badgeEl.innerHTML = badgeHTML('wnl', 'Compensated by reserve');
+  } else {
+    const roundedPrism = Math.max(0.5, Math.round(sheardPrism * 4) / 4);
+    const halfPrism = fmt(roundedPrism / 2, 2);
+    const splitLabel = isRHP
+      ? `${fmt(roundedPrism, 2)}Δ (${halfPrism}Δ BD OD / ${halfPrism}Δ BU OS)`
+      : `${fmt(roundedPrism, 2)}Δ (${halfPrism}Δ BU OD / ${halfPrism}Δ BD OS)`;
+    prismEl.textContent = splitLabel;
+    badgeEl.innerHTML = badgeHTML('high', 'Decompensated vertical');
+  }
+}
+
 /* ---------------------------------------------------------------------
    5. CASE CHAINING & SYNDROME CLASSIFICATION
 ------------------------------------------------------------------- */
@@ -712,10 +873,106 @@ function classifySyndrome() {
     }
   }
 
+  // --- VT 12 Vertical Classifications ----------------------------
+  const vt12Phoria = STATE.vt12a;
+  const vt12SupraRec = STATE.vt12b_supra_rec;
+  const vt12SupraBreak = STATE.vt12b_supra_break;
+  const vt12InfraRec = STATE.vt12b_infra_rec;
+  const vt12InfraBreak = STATE.vt12b_infra_break;
+
+  let vtSyndrome = null;
+
+  if (vt12Phoria !== null && !isNaN(vt12Phoria)) {
+    if (vt12Phoria > 0) {
+      // Right Hyperphoria
+      const mag = vt12Phoria;
+      const compRec = vt12InfraRec;
+      const isDecomp = compRec !== null ? ((2 * mag - compRec) / 3 > 0 || compRec < 1.5) : true;
+      const sheardPrism = compRec !== null ? Math.max(0.5, Math.round(((2 * mag - compRec) / 3) * 4) / 4) : Math.max(0.5, Math.round(mag * 4) / 4);
+      const halfPrism = fmt(sheardPrism / 2, 2);
+
+      if (isDecomp) {
+        vtSyndrome = {
+          tag: 'VT-12 RHP',
+          title: 'Decompensated Right Hyperphoria (Point #12)',
+          desc: `Patient presents with <strong>+${fmt(mag, 1)}&Delta; Right Hyperphoria</strong> at distance. The compensating downward fusional reserve (Right Infraduction = ${compRec !== null ? fmt(compRec, 1) + '&Delta; recovery' : 'not fully encoded'}) fails Sheard's criterion (&ge; ${fmt(2 * mag, 1)}&Delta;), resulting in non-accommodative vertical asthenopia, loss of place during tracking, and secondary horizontal vergence instability.`,
+          mgmt: [
+            `Prescribe relieving vertical prism: <strong>${fmt(sheardPrism, 2)}&Delta; total</strong> split equally as <strong>${halfPrism}&Delta; Base-Down OD / ${halfPrism}&Delta; Base-Up OS</strong>`,
+            'Vertical fusional vergence vision therapy: target Right Infraduction expansion, vertical jump vergence, and anti-suppression protocols',
+            'Differential rule-out: Screen for right superior oblique paresis or non-comitancy using Park 3-step test and check for compensatory head tilt',
+            'Clinical sequencing priority: Stabilize vertical alignment first; uncompensated vertical error impairs horizontal fusion adaptation'
+          ]
+        };
+        results.push(vtSyndrome);
+      } else {
+        vtSyndrome = {
+          tag: 'VT-12 RHP (COMP)',
+          title: 'Compensated Right Hyperphoria (Point #12)',
+          desc: `Patient exhibits <strong>+${fmt(mag, 1)}&Delta; Right Hyperphoria</strong> at distance, with compensating Right Infraduction (${fmt(compRec, 1)}&Delta; recovery) meeting Sheard's criterion.`,
+          mgmt: [
+            'Monitor vertical alignment stability under prolonged near visual fatigue',
+            'Maintenance vision therapy for vertical fusional stamina',
+            'Relieving prism not immediately indicated while deviation remains compensatory'
+          ]
+        };
+        results.push(vtSyndrome);
+      }
+    } else if (vt12Phoria < 0) {
+      // Left Hyperphoria
+      const mag = Math.abs(vt12Phoria);
+      const compRec = vt12SupraRec;
+      const isDecomp = compRec !== null ? ((2 * mag - compRec) / 3 > 0 || compRec < 1.5) : true;
+      const sheardPrism = compRec !== null ? Math.max(0.5, Math.round(((2 * mag - compRec) / 3) * 4) / 4) : Math.max(0.5, Math.round(mag * 4) / 4);
+      const halfPrism = fmt(sheardPrism / 2, 2);
+
+      if (isDecomp) {
+        vtSyndrome = {
+          tag: 'VT-12 LHP',
+          title: 'Decompensated Left Hyperphoria (Point #12)',
+          desc: `Patient presents with <strong>${fmt(mag, 1)}&Delta; Left Hyperphoria</strong> at distance. The compensating upward fusional reserve (Right Supraduction = ${compRec !== null ? fmt(compRec, 1) + '&Delta; recovery' : 'not fully encoded'}) fails Sheard's criterion (&ge; ${fmt(2 * mag, 1)}&Delta;), generating vertical binocular strain.`,
+          mgmt: [
+            `Prescribe relieving vertical prism: <strong>${fmt(sheardPrism, 2)}&Delta; total</strong> split equally as <strong>${halfPrism}&Delta; Base-Up OD / ${halfPrism}&Delta; Base-Down OS</strong>`,
+            'Vertical fusional vergence vision therapy: target Right Supraduction / Left Infraduction expansion and sensory fusion stability',
+            'Differential rule-out: Screen for left superior oblique paresis (Park 3-step test, check for head tilt to right shoulder)',
+            'Clinical sequencing priority: Correct vertical deviation to enable effective horizontal vergence recovery'
+          ]
+        };
+        results.push(vtSyndrome);
+      } else {
+        vtSyndrome = {
+          tag: 'VT-12 LHP (COMP)',
+          title: 'Compensated Left Hyperphoria (Point #12)',
+          desc: `Patient exhibits <strong>${fmt(mag, 1)}&Delta; Left Hyperphoria</strong> at distance, with adequate Right Supraduction (${fmt(compRec, 1)}&Delta; recovery) satisfying Sheard's criterion.`,
+          mgmt: [
+            'Monitor vertical alignment periodically during high-demand visual tasks',
+            'Maintenance vision therapy for vertical fusional reserve robustness',
+            'Relieving prism not indicated while deviation remains fully compensated'
+          ]
+        };
+        results.push(vtSyndrome);
+      }
+    } else if (vt12Phoria === 0 && vt12SupraBreak !== null && vt12InfraBreak !== null) {
+      const dBreak = Math.abs(vt12SupraBreak - vt12InfraBreak);
+      if (dBreak >= 2.0) {
+        vtSyndrome = {
+          tag: 'VT-12 ASYM',
+          title: 'Vertical Duction Asymmetry / Latent Strain (Point #12)',
+          desc: `Distance vertical phoria is Ortho (0&Delta;), but vertical fusional ductions are markedly asymmetric (Right Supra Break: ${fmt(vt12SupraBreak, 1)}&Delta; vs Right Infra Break: ${fmt(vt12InfraBreak, 1)}&Delta;), indicating latent vertical muscle imbalance or unequal tonus.`,
+          mgmt: [
+            'Perform prolonged monocular occlusion or fixation disparity testing to unmask latent vertical deviation',
+            'Symmetrical vertical vergence vision therapy to balance supraduction and infraduction reserves',
+            'Assess for micro-tropia or loss of place during high-speed reading saccades'
+          ]
+        };
+        results.push(vtSyndrome);
+      }
+    }
+  }
+
   if (results.length === 0) {
     tagEl.textContent = 'AWAITING DATA';
     titleEl.textContent = 'Insufficient findings for classification';
-    descEl.textContent = 'Encode distance and near vergence reserves, accommodative findings, and the gradient AC/A to activate the syndrome-matching rules for Types B1, B2, C, and Convergence Insufficiency / Excess.';
+    descEl.textContent = 'Encode distance and near vergence reserves, vertical findings (VT #12), accommodative findings, and the gradient AC/A to activate the syndrome-matching rules for Types B1, B2, C, CI/CE, and Vertical Imbalances.';
     mgmtEl.innerHTML = '';
     const extras = document.querySelectorAll('#syndromeBox .extra-syndrome-result');
     extras.forEach(e => e.remove());
@@ -731,6 +988,19 @@ function classifySyndrome() {
   descEl.innerHTML = primary.desc;
   mgmtEl.innerHTML = primary.mgmt.map(m => `<li>${m}</li>`).join('');
 
+  // Check if both horizontal and vertical anomalies exist
+  const hasHorizontal = results.some(r => ['TYPE B1', 'TYPE B2', 'TYPE C', 'CI', 'CE'].includes(r.tag));
+  const hasDecompVertical = vtSyndrome && (vtSyndrome.tag === 'VT-12 RHP' || vtSyndrome.tag === 'VT-12 LHP');
+
+  if (hasHorizontal && hasDecompVertical) {
+    const cmHTML = `
+      <div class="cross-meridian-box extra-syndrome-result">
+        <div class="cm-title">⚡ Cross-Meridian Correlation (VT #12 + Horizontal Syndrome)</div>
+        <p>An active uncompensated vertical deviation (<strong>#12a ${vt12Phoria > 0 ? '+' + fmt(vt12Phoria, 1) + 'Δ RHP' : fmt(Math.abs(vt12Phoria), 1) + 'Δ LHP'}</strong>) is compromising the sensory lock required for horizontal motor alignment. Uncorrected vertical errors destabilize horizontal vergence reserves (#10/#11/#16b/#17b) and frequently exacerbate apparent accommodative fatigue (#5/#20). <strong>Management Priority:</strong> Prescribe relieving vertical prism or initiate vertical stabilization first to restore sensory fusion before expecting full remediation from horizontal therapy.</p>
+      </div>`;
+    syndromeBox.insertAdjacentHTML('beforeend', cmHTML);
+  }
+
   if (results.length > 1) {
     const extraHTML = results.slice(1).map(r => `
       <div class="syndrome-result extra-syndrome-result" style="margin-top:10px;background:#fff;">
@@ -744,12 +1014,14 @@ function classifySyndrome() {
 }
 
 /* ---------------------------------------------------------------------
-   6. PRESET PATIENTS (B1 / B2 / C) + RESET
-   All phoria values are plain signed numbers on the Exo(+)/Eso(−) axis.
+   6. PRESET PATIENTS (B1 / B2 / C / VT 12) + RESET
+   All phoria values are plain signed numbers on the Exo(+)/Eso(−) axis
+   for horizontal and Right Hyper(+)/Left Hyper(−) for vertical (VT #12).
 ------------------------------------------------------------------- */
 const PRESET_B1 = {
   age: 24, ret4: -0.25, ret5: 1.25, ret6: 0.85, sub7: -0.75,
   d8: 1.0, d9: 5, d10break: 14, d10rec: 7, d11break: 16, d11rec: 8,
+  vt12a: 0.0, vt12b_supra_break: 3.5, vt12b_supra_rec: 2.0, vt12b_infra_break: 3.5, vt12b_infra_rec: 2.0,
   n13b: 6.0, n13b1: 9.0, n14a: 0.50, n14b: 0.50, n15a: 6.0, n15b: 6.0,
   n16a: 12, n16bbreak: 15, n16brec: 9, n17a: 12, n17bbreak: 18, n17brec: 14,
   n19: 8.0, n20: -1.50, n21: 1.75
@@ -758,6 +1030,7 @@ const PRESET_B1 = {
 const PRESET_B2 = {
   age: 24, ret4: -0.25, ret5: 1.25, ret6: 0.85, sub7: -0.75,
   d8: 1.0, d9: 5, d10break: 14, d10rec: 7, d11break: 6, d11rec: 3,
+  vt12a: 0.0, vt12b_supra_break: 3.5, vt12b_supra_rec: 2.0, vt12b_infra_break: 3.5, vt12b_infra_rec: 2.0,
   n13b: 6.0, n13b1: 9.0, n14a: 0.50, n14b: 0.50, n15a: 6.0, n15b: 6.0,
   n16a: 12, n16bbreak: 15, n16brec: 9, n17a: 12, n17bbreak: 18, n17brec: 14,
   n19: 8.0, n20: -1.50, n21: 1.75
@@ -766,9 +1039,19 @@ const PRESET_B2 = {
 const PRESET_C = {
   age: 24, ret4: 0.00, ret5: 0.85, ret6: 0.35, sub7: -0.50,
   d8: 0.25, d9: 8, d10break: 14, d10rec: 8, d11break: 6, d11rec: 3,
+  vt12a: 0.0, vt12b_supra_break: 3.5, vt12b_supra_rec: 2.0, vt12b_infra_break: 3.5, vt12b_infra_rec: 2.0,
   n13b: 6.0, n13b1: 9.5, n14a: 0.50, n14b: 0.50, n15a: 6.0, n15b: 6.0,
   n16a: 14, n16bbreak: 15, n16brec: 9, n17a: 10, n17bbreak: 16, n17brec: 10,
   n19: 8.0, n20: -2.75, n21: 2.25
+};
+
+const PRESET_VT12 = {
+  age: 26, ret4: 0.00, ret5: 0.85, ret6: 0.35, sub7: -0.50,
+  d8: 0.5, d9: 8, d10break: 20, d10rec: 11, d11break: 10, d11rec: 6,
+  vt12a: 1.5, vt12b_supra_break: 4.0, vt12b_supra_rec: 2.0, vt12b_infra_break: 2.0, vt12b_infra_rec: 0.5,
+  n13b: 6.0, n13b1: 9.0, n14a: 0.50, n14b: 0.50, n15a: 6.0, n15b: 6.0,
+  n16a: 16, n16bbreak: 22, n16brec: 16, n17a: 15, n17bbreak: 23, n17brec: 19,
+  n19: 11.0, n20: -2.50, n21: 2.00
 };
 
 function applyPatient(data) {
@@ -800,11 +1083,13 @@ function clearPatient() {
 const btnB1 = document.getElementById('btnB1');
 const btnB2 = document.getElementById('btnB2');
 const btnC = document.getElementById('btnC');
+const btnVT12 = document.getElementById('btnVT12');
 const resetBtn = document.getElementById('resetBtn');
 
 if (btnB1) btnB1.addEventListener('click', () => applyPatient(PRESET_B1));
 if (btnB2) btnB2.addEventListener('click', () => applyPatient(PRESET_B2));
 if (btnC) btnC.addEventListener('click', () => applyPatient(PRESET_C));
+if (btnVT12) btnVT12.addEventListener('click', () => applyPatient(PRESET_VT12));
 if (resetBtn) resetBtn.addEventListener('click', clearPatient);
 
 // Initial pass so all badges/previews render as idle/consistent

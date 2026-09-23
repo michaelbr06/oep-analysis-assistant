@@ -57,16 +57,116 @@ a {
 header.nameplate {
   background: var(--ink);
   color: var(--paper);
-  padding: 14px clamp(14px, 3vw, 32px);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 2px solid var(--brass);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.nameplate-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  border-bottom: 3px solid var(--brass);
-  position: sticky;
-  top: 0;
-  z-index: 40;
+  padding: 12px clamp(14px, 3vw, 32px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.manas-presets {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Framework Tabs Navigation ---------- */
+.framework-nav {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 clamp(14px, 3vw, 32px);
+  background: #101B30;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: transparent;
+  color: #A6B2CA;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+}
+
+.nav-tab:hover {
+  color: #F5F6F2;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tab.active {
+  color: #FFFFFF;
+  background: rgba(168, 121, 43, 0.12);
+  border-bottom-color: var(--brass);
+}
+
+.nav-tab-badge {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #CFD6E4;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  transition: all 0.16s ease;
+}
+
+.nav-tab.active .nav-tab-badge {
+  background: var(--brass);
+  color: #16233F;
+  font-weight: 700;
+}
+
+.nav-tab-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.nav-tab-sub {
+  font-size: 11px;
+  color: #7E8DAA;
+  font-weight: 400;
+}
+
+.nav-tab.active .nav-tab-sub {
+  color: var(--brass-soft);
+}
+
+/* ---------- Tab Panels Container ---------- */
+.tab-panel {
+  display: grid;
+  gap: 20px;
+}
+
+.tab-panel[hidden] {
+  display: none !important;
 }
 
 .brand {
@@ -929,3 +1029,570 @@ footer {
   }
 }
 
+/* ---------- Mitchell Scheiman Framework & Reference Styles ---------- */
+.scaffold-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: #FFF9E9;
+  border: 1px solid #EBD59B;
+  color: #7A530E;
+  white-space: nowrap;
+}
+
+.scaffold-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 0 2.5px rgba(198, 138, 46, 0.22);
+}
+
+.scheiman-notice-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  background: #FCFAF4;
+  border: 1px solid #E6DEC6;
+  border-left: 4px solid var(--brass);
+  border-radius: 6px;
+}
+
+.scheiman-notice-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex: none;
+}
+
+.scheiman-notice-body h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.scheiman-notice-body p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scheiman-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scheiman-table thead th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  padding: 9px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-2);
+}
+
+.scheiman-table tbody tr {
+  border-bottom: 1px solid var(--line);
+}
+
+.scheiman-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.scheiman-table tbody tr:hover {
+  background: #FBFAF4;
+}
+
+.scheiman-table td {
+  padding: 9px 18px;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.norm-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--wnl);
+}
+
+.scheiman-class-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 14px;
+  padding: 16px;
+  background: var(--paper-2);
+}
+
+.scheiman-class-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.class-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.class-code {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--brass);
+  background: var(--brass-soft);
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.class-card-header h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.class-card-features {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.class-card-features li {
+  margin-bottom: 4px;
+}
+
+.class-card-features strong {
+  color: var(--ink);
+}
+
+.scheiman-formulas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  padding: 16px;
+}
+
+.formula-box {
+  background: #FDFCF8;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formula-badge {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.formula-box h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 15.5px;
+  color: var(--ink);
+}
+
+.formula-math {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--brass);
+  background: #FFFDF7;
+  border: 1px dashed #DFCBA3;
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.formula-desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.scheiman-custom-staging {
+  background: linear-gradient(135deg, #FAF8F2 0%, #F5F1E6 100%);
+  border: 1px dashed var(--brass);
+}
+
+.staging-inner {
+  padding: 26px 20px;
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.staging-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--brass);
+  background: var(--brass-soft);
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.staging-inner h3 {
+  margin: 6px 0 8px;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--ink);
+}
+
+.staging-inner p {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.staging-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.s-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .nav-tab-sub {
+    display: none;
+  }
+  .nav-tab {
+    padding: 9px 12px;
+  }
+}
+
+/* ---------- Scheiman Form & Collapsible Reference ---------- */
+.scheiman-presets {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scheiman-ref-details {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.scheiman-ref-summary {
+  padding: 13px 18px;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  background: linear-gradient(180deg, #fff, #FBFBF8);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: background 0.15s ease;
+}
+
+.scheiman-ref-summary::-webkit-details-marker {
+  display: none;
+}
+
+.scheiman-ref-summary:hover {
+  background: #FAF8F2;
+}
+
+.scheiman-ref-details[open] .scheiman-ref-summary {
+  border-bottom-color: var(--line);
+}
+
+.scheiman-ref-body {
+  padding: 0;
+}
+
+/* ---------- Formula Legend Boxes (Sheard's, Percival's, 1:1 Rule) ---------- */
+.formula-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--brass-soft);
+  color: #5D3E0A;
+  border: 1px solid rgba(168, 121, 43, 0.4);
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.formula-legend-box {
+  background: #FCFAF5;
+  border: 1px solid #EBE4D2;
+  border-left: 3px solid var(--brass);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.fl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #E2D9C2;
+}
+
+.fl-title {
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.fl-code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--brass);
+  background: #FFF;
+  border: 1px solid #DFCBA3;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.fl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+
+.fl-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.4;
+}
+
+.fl-term {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+  background: #EFE9D9;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex: none;
+  min-width: 16px;
+  text-align: center;
+}
+
+.fl-def {
+  flex: 1;
+}
+
+.fl-rule {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px dashed #E2D9C2;
+  font-size: 11px;
+  color: #554425;
+  line-height: 1.4;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.fl-rule-badge {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--brass);
+  color: #FFF;
+  padding: 1px 5px;
+  border-radius: 2px;
+  flex: none;
+}
+
+/* ---------- Clinical Diagnostic Summary Reference Table ---------- */
+.clinical-summary-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #FFF;
+}
+
+.clinical-summary-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1240px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.clinical-summary-table thead th {
+  background: var(--paper-2);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 11px 13px;
+  border-bottom: 2px solid var(--line);
+  border-right: 1px solid var(--line-light);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.clinical-summary-table thead th:last-child {
+  border-right: none;
+}
+
+.clinical-summary-table thead th.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--paper-2);
+  border-right: 2px solid var(--line);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.04);
+}
+
+.clinical-summary-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+.clinical-summary-table tbody td {
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--line-light);
+  border-right: 1px solid var(--line-light);
+  color: var(--ink);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.clinical-summary-table tbody td:last-child {
+  border-right: none;
+}
+
+.clinical-summary-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.clinical-summary-table tbody td.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #FFF;
+  font-weight: 600;
+  color: var(--ink);
+  border-right: 2px solid var(--line);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.04);
+}
+
+.clinical-summary-table tbody tr:hover td {
+  background-color: #FAF8F2;
+}
+
+.clinical-summary-table tbody tr:hover td.sticky-col {
+  background-color: #FAF8F2;
+}
+
+.summary-table-footnote {
+  padding: 11px 16px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  border-top: 1px solid var(--line);
+  line-height: 1.5;
+}
+
+.c-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  line-height: 1.3;
+}
+
+.c-low {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+
+.c-high {
+  background: #E0E7FF;
+  color: #3730A3;
+  border: 1px solid #C7D2FE;
+}
+
+.c-flag {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+
+.c-fail {
+  background: #FDE8E8;
+  color: #9B2C2C;
+  border: 1px solid #F8B4B4;
+}

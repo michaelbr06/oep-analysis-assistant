@@ -1,7 +1,7 @@
 {
-  "name": "OEP Visual Analysis Assistant",
-  "short_name": "OEP Assistant",
-  "description": "Manas 21-Point Visual Analysis & Case Chaining decision-support tool.",
+  "name": "Visual Analysis Assistant",
+  "short_name": "Visual Analysis",
+  "description": "Visual Analysis & Clinical Decision-Support tool (Leo Manas 21-Point and Mitchell Scheiman frameworks).",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#F5F6F2",

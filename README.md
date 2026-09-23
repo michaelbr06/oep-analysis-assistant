@@ -1,2 +1,3 @@
-# oep-analysis-assistant
-21-Step Visual Test PWA for Clinical Assessment
+# Visual Analysis Assistant
+Clinical decision-support PWA featuring Dr. Leo Manas' 21-Point Case Chaining framework and Dr. Mitchell Scheiman's binocular vision diagnostic reference.
+

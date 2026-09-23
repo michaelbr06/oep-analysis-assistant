@@ -1,5 +1,5 @@
 /* =====================================================================
-   OEP VISUAL ANALYSIS ASSISTANT
+   VISUAL ANALYSIS ASSISTANT
    Vanilla-JS, modular PWA architecture, no CDN dependencies.
    ---------------------------------------------------------------------
    SIGNED PHORIA AXIS
@@ -1136,3 +1136,877 @@ collectAndEvaluate();
     if (installBtn) installBtn.hidden = true;
   });
 })();
+
+/* ---------------------------------------------------------------------
+   8. FRAMEWORK TAB CONTROLLER (Leo Manas vs. Mitchell Scheiman)
+------------------------------------------------------------------- */
+(function setupFrameworkTabs() {
+  const tabManas = document.getElementById('tab-manas');
+  const tabScheiman = document.getElementById('tab-scheiman');
+  const panelManas = document.getElementById('panel-manas');
+  const panelScheiman = document.getElementById('panel-scheiman');
+  const manasPresets = document.getElementById('manasPresets');
+  const brandMark = document.getElementById('brandMark');
+  const brandSubtitle = document.getElementById('brandSubtitle');
+
+  const tabs = [
+    { id: 'manas', btn: tabManas, panel: panelManas },
+    { id: 'scheiman', btn: tabScheiman, panel: panelScheiman }
+  ];
+
+  function switchTab(targetId, updateHash = true) {
+    tabs.forEach(({ id, btn, panel }) => {
+      const isActive = (id === targetId);
+      if (btn) {
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        btn.setAttribute('tabindex', isActive ? '0' : '-1');
+      }
+      if (panel) {
+        panel.classList.toggle('active', isActive);
+        if (isActive) {
+          panel.removeAttribute('hidden');
+        } else {
+          panel.setAttribute('hidden', '');
+        }
+      }
+    });
+
+    if (manasPresets) {
+      manasPresets.style.display = (targetId === 'manas') ? 'inline-flex' : 'none';
+    }
+    const scheimanPresets = document.getElementById('scheimanPresets');
+    if (scheimanPresets) {
+      scheimanPresets.style.display = (targetId === 'scheiman') ? 'inline-flex' : 'none';
+    }
+
+    if (brandSubtitle) {
+      if (targetId === 'manas') {
+        brandSubtitle.textContent = 'Manas 21‑Point · Case Chaining Engine';
+      } else {
+        brandSubtitle.textContent = 'Mitchell Scheiman · Binocular Vision & Accommodation';
+      }
+    }
+
+    if (brandMark) {
+      brandMark.textContent = (targetId === 'manas') ? '21°' : 'MS';
+    }
+
+    try {
+      localStorage.setItem('activeFrameworkTab', targetId);
+    } catch (_) {}
+
+    if (updateHash) {
+      if (window.location.hash !== `#${targetId}`) {
+        history.replaceState(null, '', `#${targetId}`);
+      }
+    }
+  }
+
+  if (tabManas) tabManas.addEventListener('click', () => switchTab('manas'));
+  if (tabScheiman) tabScheiman.addEventListener('click', () => switchTab('scheiman'));
+
+  // Keyboard navigation for WAI-ARIA tabs (ArrowLeft / ArrowRight)
+  const tabList = document.querySelector('.framework-nav');
+  if (tabList) {
+    tabList.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const activeIdx = tabs.findIndex(t => t.btn && t.btn.classList.contains('active'));
+        const nextIdx = (activeIdx + 1) % tabs.length;
+        if (tabs[nextIdx].btn) {
+          tabs[nextIdx].btn.focus();
+          switchTab(tabs[nextIdx].id);
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const activeIdx = tabs.findIndex(t => t.btn && t.btn.classList.contains('active'));
+        const prevIdx = (activeIdx - 1 + tabs.length) % tabs.length;
+        if (tabs[prevIdx].btn) {
+          tabs[prevIdx].btn.focus();
+          switchTab(tabs[prevIdx].id);
+        }
+      }
+    });
+  }
+
+  // Restore tab from hash or localStorage, default to 'manas'
+  const hash = window.location.hash.replace('#', '').toLowerCase();
+  let saved = null;
+  try {
+    saved = localStorage.getItem('activeFrameworkTab');
+  } catch (_) {}
+
+  const initialTab = (hash === 'scheiman' || (!hash && saved === 'scheiman')) ? 'scheiman' : 'manas';
+  switchTab(initialTab, false);
+})();
+
+/* =====================================================================
+   9. MITCHELL SCHEIMAN CLINICAL FORM & DIAGNOSTIC ENGINE
+   Vanilla-JS, Morgan's Norms, Parallel 21-Point Steps, Sheard's, Percival's
+===================================================================== */
+
+const SCHEIMAN_STATE = {};
+const SCHEIMAN_FLAGS = {};
+
+function morganReserveStatus(value, expectedMean, sd) {
+  if (value === null || value === '' || isNaN(value)) return { status: 'idle', note: '—' };
+  const lower = expectedMean - (sd || 0);
+  if (value < lower) return { status: 'low', note: `< ${lower}Δ (below expected)` };
+  if (value >= expectedMean + (sd || 0) * 1.5) return { status: 'high', note: `≥ ${expectedMean + (sd || 0) * 1.5}Δ (above expected)` };
+  return { status: 'wnl', note: `meets ${expectedMean}Δ norm` };
+}
+
+function morganPhoriaStatus(value, mean, sd) {
+  if (value === null || value === '' || isNaN(value)) return { status: 'idle', note: '—' };
+  const highThreshold = mean + sd;
+  const lowThreshold = mean - sd;
+  if (value > highThreshold) return { status: 'high', note: `> +${highThreshold}Δ (Exo trend)` };
+  if (value < lowThreshold) return { status: 'low', note: `< ${lowThreshold < 0 ? '' : '+'}${lowThreshold}Δ (Eso trend)` };
+  return { status: 'wnl', note: 'within Morgan range' };
+}
+
+const SCHEIMAN_FIELDS = [
+  // ---- Baseline & Refractive Findings --------------------------------
+  {
+    id: 's_age', section: 'baseline', oep: '—', label: 'Age', sub: 'Chronological age',
+    kind: 'num', unit: 'yrs', step: '1', placeholder: 'e.g., 22',
+    evaluate: () => ({ status: 'idle', note: 'baseline for Hofstetter norms' }),
+    normText: () => 'Hofstetter norms'
+  },
+  {
+    id: 's_ret4', section: 'baseline', oep: 'Pt. #4', label: 'Static Distance Refraction', sub: 'Objective spherical equivalent baseline',
+    kind: 'num', unit: 'D', step: '0.25', placeholder: 'e.g., -0.50',
+    evaluate: () => ({ status: 'idle', note: 'refractive baseline' }),
+    normText: () => 'Clinical baseline'
+  },
+  {
+    id: 's_mem', section: 'baseline', oep: 'Pt. #6', label: 'MEM Accommodative Lag', sub: 'Dynamic retinoscopy at 40 cm',
+    kind: 'num', unit: 'D', step: '0.25', placeholder: 'e.g., +0.50',
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v > 0.75) return { status: 'high', note: `lag > +0.75D (under-accommodating)` };
+      if (v < 0.25) return { status: 'low', note: `lead/lag < +0.25D (over-accommodating)` };
+      return { status: 'wnl', note: `+0.50D expected lag` };
+    },
+    normText: () => '+0.50 D (±0.25 D)'
+  },
+
+  // ---- Distance Findings (6 m) ---------------------------------------
+  {
+    id: 's_d_phoria', section: 'distance', oep: 'Pt. #8', label: 'Distance Lateral Phoria', sub: 'Von Graefe / Maddox rod (6 m)',
+    kind: 'phoria', unit: 'Δ', step: '0.5', placeholder: 'e.g., +1.0 or -2.0',
+    evaluate: (v) => morganPhoriaStatus(v, 1.0, 2.0),
+    normText: () => '1.0Δ Exo (±2.0Δ)'
+  },
+  {
+    id: 's_d_bi_blur', section: 'distance', oep: 'Pt. #11', label: 'Distance BI Blur (NFV)', sub: 'Base-in to blur',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., —',
+    evaluate: () => ({ status: 'idle', note: 'none expected' }),
+    normText: () => '— (no blur expected)'
+  },
+  {
+    id: 's_d_bi_break', section: 'distance', oep: 'Pt. #11', label: 'Distance BI Break (NFV)', sub: 'Base-in to diplopia',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 7',
+    evaluate: (v) => morganReserveStatus(v, 7, 3),
+    normText: () => '7Δ (±3Δ)'
+  },
+  {
+    id: 's_d_bi_rec', section: 'distance', oep: 'Pt. #11', label: 'Distance BI Recovery (NFV)', sub: 'Base-in recovery of fusion',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 4',
+    evaluate: (v) => morganReserveStatus(v, 4, 2),
+    normText: () => '4Δ (±2Δ)'
+  },
+  {
+    id: 's_d_bo_blur', section: 'distance', oep: 'Pt. #9', label: 'Distance BO Blur (PFV)', sub: 'Base-out to blur',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 9',
+    evaluate: (v) => morganReserveStatus(v, 9, 4),
+    normText: () => '9Δ (±4Δ)'
+  },
+  {
+    id: 's_d_bo_break', section: 'distance', oep: 'Pt. #10', label: 'Distance BO Break (PFV)', sub: 'Base-out to diplopia',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 19',
+    evaluate: (v) => morganReserveStatus(v, 19, 8),
+    normText: () => '19Δ (±8Δ)'
+  },
+  {
+    id: 's_d_bo_rec', section: 'distance', oep: 'Pt. #10', label: 'Distance BO Recovery (PFV)', sub: 'Base-out recovery of fusion',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 10',
+    evaluate: (v) => morganReserveStatus(v, 10, 4),
+    normText: () => '10Δ (±4Δ)'
+  },
+  {
+    id: 's_d_vert_phoria', section: 'distance', oep: 'Pt. #12a', label: 'Distance Vertical Phoria', sub: 'Signed (+ R.Hyper / − L.Hyper)',
+    kind: 'phoria', phoriaType: 'vertical', unit: 'Δ', step: '0.5', placeholder: 'e.g., 0.0',
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v === 0) return { status: 'wnl', note: 'Ortho (0Δ)' };
+      if (v > 0) return { status: 'high', note: `+${fmt(v, 1)}Δ Right Hyper` };
+      return { status: 'low', note: `${fmt(Math.abs(v), 1)}Δ Left Hyper` };
+    },
+    normText: () => 'Ortho (0.0Δ)'
+  },
+
+  // ---- Nearpoint Findings (40 cm) ------------------------------------
+  {
+    id: 's_npc_break', section: 'near', oep: 'Clinical BV', label: 'Near Point of Convergence (Break)', sub: 'Accommodative target (TTM) to diplopia',
+    kind: 'num', unit: 'cm', step: '0.5', placeholder: 'e.g., 4.0',
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v > 5.0) return { status: 'amber', note: `${fmt(v, 1)} cm > 5 cm (receded)` };
+      return { status: 'wnl', note: `normal (< 5 cm)` };
+    },
+    normText: () => '< 5 cm'
+  },
+  {
+    id: 's_npc_rec', section: 'near', oep: 'Clinical BV', label: 'NPC Recovery', sub: 'Recovery of single binocular vision',
+    kind: 'num', unit: 'cm', step: '0.5', placeholder: 'e.g., 6.0',
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v > 7.0) return { status: 'amber', note: `${fmt(v, 1)} cm > 7 cm (receded)` };
+      return { status: 'wnl', note: `normal (< 7 cm)` };
+    },
+    normText: () => '< 7 cm'
+  },
+  {
+    id: 's_n_phoria', section: 'near', oep: 'Pt. #13b', label: 'Near Lateral Phoria', sub: 'Von Graefe, 40 cm',
+    kind: 'phoria', unit: 'Δ', step: '0.5', placeholder: 'e.g., +3.0',
+    evaluate: (v) => morganPhoriaStatus(v, 3.0, 3.0),
+    normText: () => '3.0Δ Exo (±3.0Δ)'
+  },
+  {
+    id: 's_n_phoria_plus1', section: 'near', oep: 'Pt. #13b+1.00', label: 'Near Phoria through +1.00 D', sub: 'Gradient AC/A input at 40 cm',
+    kind: 'phoria', unit: 'Δ', step: '0.5', placeholder: 'e.g., +7.0',
+    evaluate: () => ({ status: 'idle', note: 'for Gradient AC/A' }),
+    normText: () => 'for Gradient AC/A'
+  },
+  {
+    id: 's_n_bi_blur', section: 'near', oep: 'Pt. #17a', label: 'Near BI Blur (NFV)', sub: 'Base-in to blur at 40 cm',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 13',
+    evaluate: (v) => morganReserveStatus(v, 13, 4),
+    normText: () => '13Δ (±4Δ)'
+  },
+  {
+    id: 's_n_bi_break', section: 'near', oep: 'Pt. #17b', label: 'Near BI Break (NFV)', sub: 'Base-in to diplopia at 40 cm',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 21',
+    evaluate: (v) => morganReserveStatus(v, 21, 4),
+    normText: () => '21Δ (±4Δ)'
+  },
+  {
+    id: 's_n_bi_rec', section: 'near', oep: 'Pt. #17b', label: 'Near BI Recovery (NFV)', sub: 'Base-in recovery at 40 cm',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 13',
+    evaluate: (v) => morganReserveStatus(v, 13, 5),
+    normText: () => '13Δ (±5Δ)'
+  },
+  {
+    id: 's_n_bo_blur', section: 'near', oep: 'Pt. #16a', label: 'Near BO Blur (PFV)', sub: 'Base-out to blur at 40 cm',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 17',
+    evaluate: (v) => morganReserveStatus(v, 17, 5),
+    normText: () => '17Δ (±5Δ)'
+  },
+  {
+    id: 's_n_bo_break', section: 'near', oep: 'Pt. #16b', label: 'Near BO Break (PFV)', sub: 'Base-out to diplopia at 40 cm',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 21',
+    evaluate: (v) => morganReserveStatus(v, 21, 6),
+    normText: () => '21Δ (±6Δ)'
+  },
+  {
+    id: 's_n_bo_rec', section: 'near', oep: 'Pt. #16b', label: 'Near BO Recovery (PFV)', sub: 'Base-out recovery at 40 cm',
+    kind: 'num', unit: 'Δ', step: '1', placeholder: 'e.g., 11',
+    evaluate: (v) => morganReserveStatus(v, 11, 7),
+    normText: () => '11Δ (±7Δ)'
+  },
+
+  // ---- Accommodative Findings ----------------------------------------
+  {
+    id: 's_amp', section: 'accomm', oep: 'Pt. #19', label: 'Accommodative Amplitude', sub: 'Push-up test (D)',
+    kind: 'num', unit: 'D', step: '0.25', placeholder: 'e.g., 12.0',
+    evaluate: (v) => {
+      const age = SCHEIMAN_STATE.s_age;
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (age === null || isNaN(age)) return { status: 'amber', note: 'enter age for norm' };
+      const min = 15 - 0.25 * age, avg = 18.5 - 0.30 * age;
+      if (v < min) return { status: 'low', note: `below min (${fmt(min, 1)}D)` };
+      if (v < avg) return { status: 'amber', note: `below avg (${fmt(avg, 1)}D)` };
+      return { status: 'wnl', note: `≥ avg (${fmt(avg, 1)}D)` };
+    },
+    normText: () => 'Hofstetter: 18.5−0.30·age'
+  },
+  {
+    id: 's_baf', section: 'accomm', oep: 'Clinical BV', label: 'Binocular Accomm. Facility (BAF)', sub: '±2.00 D flipper at 40 cm',
+    kind: 'num', unit: 'cpm', step: '1', placeholder: 'e.g., 8',
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v < 3) return { status: 'low', note: `${v} cpm < 3 cpm (reduced)` };
+      return { status: 'wnl', note: `meets 8 cpm norm` };
+    },
+    normText: () => '8 cpm (±5 cpm)'
+  },
+  {
+    id: 's_maf', section: 'accomm', oep: 'Clinical BV', label: 'Monocular Accomm. Facility (MAF)', sub: '±2.00 D flipper at 40 cm',
+    kind: 'num', unit: 'cpm', step: '1', placeholder: 'e.g., 11',
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v < 6) return { status: 'low', note: `${v} cpm < 6 cpm (reduced)` };
+      return { status: 'wnl', note: `meets 11 cpm norm` };
+    },
+    normText: () => '11 cpm (±5 cpm)'
+  },
+  {
+    id: 's_nra', section: 'accomm', oep: 'Pt. #21', label: 'Negative Relative Accomm. (NRA)', sub: 'Plus lenses to blur at 40 cm',
+    kind: 'num', unit: 'D', step: '0.25', placeholder: 'e.g., +2.00',
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v < 1.50) return { status: 'low', note: `< +1.50D (low)` };
+      if (v > 2.50) return { status: 'high', note: `> +2.50D (high / latent hyperopia)` };
+      return { status: 'wnl', note: `meets +2.00D norm` };
+    },
+    normText: () => '+2.00 D (±0.50 D)'
+  },
+  {
+    id: 's_pra', section: 'accomm', oep: 'Pt. #20', label: 'Positive Relative Accomm. (PRA)', sub: 'Minus lenses to blur at 40 cm',
+    kind: 'num', unit: 'D', step: '0.25', placeholder: 'e.g., -2.50',
+    evaluate: (v) => {
+      if (v === null || isNaN(v)) return { status: 'idle', note: '—' };
+      if (v > -1.37) return { status: 'low', note: `short of -1.37D norm` };
+      return { status: 'wnl', note: `meets -2.37D norm` };
+    },
+    normText: () => '−2.37 D (±1.00 D)'
+  }
+];
+
+function updateScheimanPhoriaPreview(id, val) {
+  const el = document.getElementById(`scheiman-prev-${id}`);
+  if (!el) return;
+  if (val === null || val === undefined || isNaN(val)) {
+    el.textContent = '';
+    el.className = 'phoria-preview';
+    return;
+  }
+  const f = SCHEIMAN_FIELDS.find(x => x.id === id);
+  if (f && f.phoriaType === 'vertical') {
+    if (val === 0) {
+      el.textContent = 'Ortho (0.0Δ)';
+      el.className = 'phoria-preview ortho';
+    } else if (val > 0) {
+      el.textContent = `+${fmt(val, 1)}Δ Right Hyper`;
+      el.className = 'phoria-preview r-hyper';
+    } else {
+      el.textContent = `${fmt(Math.abs(val), 1)}Δ Left Hyper`;
+      el.className = 'phoria-preview l-hyper';
+    }
+  } else {
+    if (val === 0) {
+      el.textContent = 'Ortho (0.0Δ)';
+      el.className = 'phoria-preview ortho';
+    } else if (val > 0) {
+      el.textContent = `+${fmt(val, 1)}Δ Exo`;
+      el.className = 'phoria-preview exo';
+    } else {
+      el.textContent = `${fmt(Math.abs(val), 1)}Δ Eso`;
+      el.className = 'phoria-preview eso';
+    }
+  }
+}
+
+function renderScheimanTables() {
+  const targets = {
+    baseline: document.getElementById('tbl-scheiman-baseline'),
+    distance: document.getElementById('tbl-scheiman-distance'),
+    near: document.getElementById('tbl-scheiman-near'),
+    accomm: document.getElementById('tbl-scheiman-accomm')
+  };
+
+  SCHEIMAN_FIELDS.forEach(f => {
+    const tbody = targets[f.section];
+    if (!tbody) return;
+
+    const tr = document.createElement('tr');
+    tr.id = `scheiman-row-${f.id}`;
+
+    let inputHTML;
+    if (f.kind === 'phoria') {
+      const isVert = f.phoriaType === 'vertical';
+      const pl = f.placeholder || (isVert ? 'e.g., 0.0 or +1.5' : 'e.g., +3.0 or -2.0');
+      inputHTML = `
+        <div class="inp-wrap phoria-wrap">
+          <input type="number" step="${f.step || '0.5'}"
+                 placeholder="${pl}"
+                 data-scheiman-signed="${f.id}"
+                 aria-label="${f.label}">
+          <span class="unit">${f.unit}</span>
+          <span class="phoria-preview" id="scheiman-prev-${f.id}"></span>
+        </div>`;
+    } else {
+      inputHTML = `
+        <div class="inp-wrap">
+          <input type="number" step="${f.step || '0.25'}"
+                 placeholder="${f.placeholder || '—'}"
+                 data-scheiman-num="${f.id}"
+                 aria-label="${f.label}">
+          <span class="unit">${f.unit}</span>
+        </div>`;
+    }
+
+    tr.innerHTML = `
+      <td class="cell-oep"><span class="oep-no">${f.oep}</span></td>
+      <td class="flabel" data-oep="${f.oep}">
+        ${f.label}
+        <small>${f.sub}</small>
+      </td>
+      <td>${inputHTML}</td>
+      <td class="cell-norm"><span class="norm-text">${f.normText()}</span></td>
+      <td class="cell-status" id="scheiman-badge-${f.id}">${badgeHTML('idle', '—')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Attach live input listeners
+  document.querySelectorAll('[data-scheiman-signed]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const id = inp.getAttribute('data-scheiman-signed');
+      const val = inp.value.trim() === '' ? null : parseFloat(inp.value);
+      SCHEIMAN_STATE[id] = (val === null || isNaN(val)) ? null : val;
+      updateScheimanPhoriaPreview(id, SCHEIMAN_STATE[id]);
+      evaluateScheiman();
+    });
+  });
+
+  document.querySelectorAll('[data-scheiman-num]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const id = inp.getAttribute('data-scheiman-num');
+      const val = inp.value.trim() === '' ? null : parseFloat(inp.value);
+      SCHEIMAN_STATE[id] = (val === null || isNaN(val)) ? null : val;
+      evaluateScheiman();
+    });
+  });
+}
+
+// Scheiman AC/A SVG dial
+function drawScheimanAcaGauge(value) {
+  const svg = document.getElementById('scheimanAcaGauge');
+  if (!svg) return;
+  const cx = 110, cy = 110, r = 90;
+  const minV = 0, maxV = 8;
+  const angleFor = (v) => Math.PI - (Math.min(Math.max(v, minV), maxV) - minV) / (maxV - minV) * Math.PI;
+  const point = (v, rad = r) => {
+    const a = angleFor(v);
+    return [cx + rad * Math.cos(a), cy - rad * Math.sin(a)];
+  };
+  const arcPath = (fromV, toV, rad) => {
+    const [x1, y1] = point(fromV, rad), [x2, y2] = point(toV, rad);
+    const large = (toV - fromV) > (maxV - minV) / 2 ? 1 : 0;
+    return `M ${x1} ${y1} A ${rad} ${rad} 0 ${large} 1 ${x2} ${y2}`;
+  };
+  let needle = '';
+  if (value !== null && !isNaN(value)) {
+    const [nx, ny] = point(value, r - 14);
+    needle = `<line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#16233F" stroke-width="3" stroke-linecap="round"/>
+               <circle cx="${cx}" cy="${cy}" r="5" fill="#A8792B"/>`;
+  }
+  svg.innerHTML = `
+    <path d="${arcPath(minV, maxV, r)}" fill="none" stroke="#EBEDE6" stroke-width="16"/>
+    <path d="${arcPath(3, 5, r)}" fill="none" stroke="#CADFCE" stroke-width="16"/>
+    <path d="${arcPath(minV, 3, r)}" fill="none" stroke="#E2ECF3" stroke-width="16"/>
+    <path d="${arcPath(5, maxV, r)}" fill="none" stroke="#F5E3E1" stroke-width="16"/>
+    ${needle}
+    <text x="${cx}" y="128" text-anchor="middle" font-size="10" fill="#4B5670" font-family="ui-monospace,monospace">0</text>
+    <text x="${cx - r}" y="${cy + 14}" text-anchor="middle" font-size="10" fill="#4B5670" font-family="ui-monospace,monospace">0</text>
+    <text x="${cx + r}" y="${cy + 14}" text-anchor="middle" font-size="10" fill="#4B5670" font-family="ui-monospace,monospace">8</text>
+  `;
+}
+
+function evaluateScheiman() {
+  // 1. Evaluate individual fields against Morgan's expectancies
+  SCHEIMAN_FIELDS.forEach(f => {
+    const v = SCHEIMAN_STATE[f.id] ?? null;
+    const res = f.evaluate(v);
+    SCHEIMAN_FLAGS[f.id] = res;
+    const badgeEl = document.getElementById(`scheiman-badge-${f.id}`);
+    if (badgeEl) badgeEl.innerHTML = badgeHTML(res.status, res.note);
+  });
+
+  // 2. Gradient AC/A Calculation
+  const np = SCHEIMAN_STATE.s_n_phoria;
+  const npPlus = SCHEIMAN_STATE.s_n_phoria_plus1;
+  const acaValEl = document.getElementById('scheimanAcaValue');
+  const acaLblEl = document.getElementById('scheimanAcaLabel');
+  let acaRatio = null;
+
+  if (np !== null && np !== undefined && npPlus !== null && npPlus !== undefined) {
+    // Gradient: shift with +1.00 D
+    acaRatio = Math.abs(npPlus - np);
+    if (acaValEl) acaValEl.textContent = `${fmt(acaRatio, 1)} : 1`;
+    let acaTxt = 'Within Morgan expected range (4:1 ± 2:1)';
+    if (acaRatio < 3) acaTxt = 'Low AC/A ratio (< 3:1)';
+    else if (acaRatio > 5) acaTxt = 'High AC/A ratio (> 5:1)';
+    if (acaLblEl) acaLblEl.textContent = acaTxt;
+    drawScheimanAcaGauge(acaRatio);
+  } else {
+    if (acaValEl) acaValEl.textContent = '—';
+    if (acaLblEl) acaLblEl.textContent = 'Enter Near phorias to calculate';
+    drawScheimanAcaGauge(null);
+  }
+
+  // 3. Sheard's Criterion Solver (primarily for Exophoria)
+  const dPhoria = SCHEIMAN_STATE.s_d_phoria;
+  const nPhoria = SCHEIMAN_STATE.s_n_phoria;
+  const nBoBlur = SCHEIMAN_STATE.s_n_bo_blur;
+  const nBoBreak = SCHEIMAN_STATE.s_n_bo_break;
+
+  const exoDemand = (nPhoria !== null && nPhoria > 0) ? nPhoria : (dPhoria !== null && dPhoria > 0 ? dPhoria : null);
+  const pfvReserve = (nBoBlur !== null && !isNaN(nBoBlur)) ? nBoBlur : (nBoBreak !== null && !isNaN(nBoBreak) ? nBoBreak : null);
+
+  const sheardDemEl = document.getElementById('sheardDemandVal');
+  const sheardResEl = document.getElementById('sheardReserveVal');
+  const sheardReqEl = document.getElementById('sheardReqVal');
+  const sheardPrismEl = document.getElementById('sheardPrismVal');
+  const sheardBadgeEl = document.getElementById('sheardStatusBadge');
+
+  if (exoDemand !== null) {
+    if (sheardDemEl) sheardDemEl.textContent = `+${fmt(exoDemand, 1)}Δ Exophoria`;
+    if (sheardReqEl) sheardReqEl.textContent = `${fmt(2 * exoDemand, 1)}Δ (2× demand)`;
+    if (pfvReserve !== null) {
+      if (sheardResEl) sheardResEl.textContent = `${fmt(pfvReserve, 1)}Δ PFV (BO)`;
+      const sheardPrism = (2 * exoDemand - pfvReserve) / 3;
+      if (sheardPrism <= 0) {
+        if (sheardPrismEl) sheardPrismEl.textContent = '0.0Δ (None needed)';
+        if (sheardBadgeEl) sheardBadgeEl.innerHTML = badgeHTML('wnl', 'Meets Sheard\'s criterion');
+      } else {
+        const roundedPrism = Math.ceil(sheardPrism * 2) / 2;
+        if (sheardPrismEl) sheardPrismEl.textContent = `${fmt(sheardPrism, 1)}Δ BI Prism (~${fmt(roundedPrism, 1)}Δ)`;
+        if (sheardBadgeEl) sheardBadgeEl.innerHTML = badgeHTML('low', 'Prism indicated / Asthenopic risk');
+      }
+    } else {
+      if (sheardResEl) sheardResEl.textContent = 'Needs Near BO reserve';
+      if (sheardPrismEl) sheardPrismEl.textContent = '—';
+      if (sheardBadgeEl) sheardBadgeEl.innerHTML = badgeHTML('idle', 'Awaiting BO reserve');
+    }
+  } else {
+    if (sheardDemEl) sheardDemEl.textContent = 'No Exophoria demand';
+    if (sheardResEl) sheardResEl.textContent = '—';
+    if (sheardReqEl) sheardReqEl.textContent = '—';
+    if (sheardPrismEl) sheardPrismEl.textContent = 'None indicated';
+    if (sheardBadgeEl) sheardBadgeEl.innerHTML = badgeHTML('idle', '—');
+  }
+
+  // 4. Percival's Criterion Solver (primarily for Esophoria)
+  const nBiBreak = SCHEIMAN_STATE.s_n_bi_break;
+  const percGEl = document.getElementById('percivalGreaterVal');
+  const percLEl = document.getElementById('percivalLesserVal');
+  const percZEl = document.getElementById('percivalZoneVal');
+  const percPEl = document.getElementById('percivalPrismVal');
+  const percBEl = document.getElementById('percivalStatusBadge');
+
+  if (nBoBreak !== null && nBiBreak !== null && !isNaN(nBoBreak) && !isNaN(nBiBreak)) {
+    const greater = Math.max(nBoBreak, nBiBreak);
+    const lesser = Math.min(nBoBreak, nBiBreak);
+    const gLabel = greater === nBoBreak ? 'BO' : 'BI';
+    const lLabel = lesser === nBiBreak ? 'BI' : 'BO';
+    if (percGEl) percGEl.textContent = `${fmt(greater, 1)}Δ (${gLabel})`;
+    if (percLEl) percLEl.textContent = `${fmt(lesser, 1)}Δ (${lLabel})`;
+    const percPrism = (greater - 2 * lesser) / 3;
+    if (percPrism <= 0) {
+      if (percZEl) percZEl.textContent = 'Within balanced middle third';
+      if (percPEl) percPEl.textContent = '0.0Δ (None needed)';
+      if (percBEl) percBEl.innerHTML = badgeHTML('wnl', 'Meets Percival\'s criterion');
+    } else {
+      const roundedPrism = Math.ceil(percPrism * 2) / 2;
+      const prismDir = (lLabel === 'BI') ? 'Base-Out' : 'Base-In';
+      if (percZEl) percZEl.textContent = 'Outside middle-third zone';
+      if (percPEl) percPEl.textContent = `${fmt(percPrism, 1)}Δ ${prismDir} (~${fmt(roundedPrism, 1)}Δ)`;
+      if (percBEl) percBEl.innerHTML = badgeHTML('low', 'Prism or plus add indicated');
+    }
+  } else {
+    if (percGEl) percGEl.textContent = '—';
+    if (percLEl) percLEl.textContent = '—';
+    if (percZEl) percZEl.textContent = 'Needs Near BI & BO breaks';
+    if (percPEl) percPEl.textContent = '—';
+    if (percBEl) percBEl.innerHTML = badgeHTML('idle', '—');
+  }
+
+  // 5. 1:1 Rule Solver & Accommodative Analyzer
+  const ruleEl = document.getElementById('rule1to1Val');
+  const memEl = document.getElementById('scheimanMemVal');
+  const bafEl = document.getElementById('scheimanBafVal');
+  const accommStatEl = document.getElementById('scheimanAccommStatus');
+
+  const nBoRec = SCHEIMAN_STATE.s_n_bo_rec;
+  if (nPhoria !== null && nPhoria < 0) {
+    const esoMag = Math.abs(nPhoria);
+    if (nBoRec !== null && !isNaN(nBoRec)) {
+      const rulePrism = (esoMag - nBoRec) / 2;
+      if (rulePrism <= 0) {
+        if (ruleEl) ruleEl.textContent = 'Compensated (0.0Δ)';
+      } else {
+        const rounded = Math.ceil(rulePrism * 2) / 2;
+        if (ruleEl) ruleEl.textContent = `${fmt(rulePrism, 1)}Δ BO Prism (~${fmt(rounded, 1)}Δ)`;
+      }
+    } else {
+      if (ruleEl) ruleEl.textContent = 'Needs Near BO Recovery';
+    }
+  } else {
+    if (ruleEl) ruleEl.textContent = 'N/A (Patient is Exophoric/Ortho)';
+  }
+
+  const memVal = SCHEIMAN_STATE.s_mem;
+  const bafVal = SCHEIMAN_STATE.s_baf;
+  const ampVal = SCHEIMAN_STATE.s_amp;
+  const ageVal = SCHEIMAN_STATE.s_age;
+
+  if (memEl) memEl.textContent = (memVal !== null && !isNaN(memVal)) ? `+${fmt(memVal, 2)} D` : '—';
+  if (bafEl) bafEl.textContent = (bafVal !== null && !isNaN(bafVal)) ? `${bafVal} cpm` : '—';
+
+  if (accommStatEl) {
+    if (ampVal !== null && ageVal !== null) {
+      const minAmp = 15 - 0.25 * ageVal;
+      if (ampVal < minAmp) {
+        accommStatEl.innerHTML = badgeHTML('low', 'Accommodative Insufficiency (Amp < Hofstetter min)');
+      } else if (bafVal !== null && bafVal < 3) {
+        accommStatEl.innerHTML = badgeHTML('amber', 'Reduced facility / infacility');
+      } else if (memVal !== null && memVal > 0.75) {
+        accommStatEl.innerHTML = badgeHTML('high', 'High Accommodative Lag');
+      } else {
+        accommStatEl.innerHTML = badgeHTML('wnl', 'Accommodative function normal');
+      }
+    } else {
+      accommStatEl.innerHTML = badgeHTML('idle', '—');
+    }
+  }
+
+  // 6. Scheiman & Wick Clinical Diagnostic Matcher
+  evaluateScheimanClassification();
+}
+
+function evaluateScheimanClassification() {
+  const box = document.getElementById('scheimanDiagBox');
+  const tag = document.getElementById('scheimanDiagTag');
+  const title = document.getElementById('scheimanDiagTitle');
+  const desc = document.getElementById('scheimanDiagDesc');
+  const mgmt = document.getElementById('scheimanMgmtList');
+  if (!box || !tag || !title || !desc || !mgmt) return;
+
+  const dPhoria = SCHEIMAN_STATE.s_d_phoria;
+  const nPhoria = SCHEIMAN_STATE.s_n_phoria;
+  const npcBreak = SCHEIMAN_STATE.s_npc_break;
+  const nBoBreak = SCHEIMAN_STATE.s_n_bo_break;
+  const nBoBlur = SCHEIMAN_STATE.s_n_bo_blur;
+  const nBiBreak = SCHEIMAN_STATE.s_n_bi_break;
+  const dBiBreak = SCHEIMAN_STATE.s_d_bi_break;
+  const dBoBreak = SCHEIMAN_STATE.s_d_bo_break;
+  const amp = SCHEIMAN_STATE.s_amp;
+  const age = SCHEIMAN_STATE.s_age;
+  const baf = SCHEIMAN_STATE.s_baf;
+  const mem = SCHEIMAN_STATE.s_mem;
+
+  if (dPhoria === null && nPhoria === null) {
+    tag.textContent = 'AWAITING CLINICAL DATA';
+    title.textContent = 'Enter findings above to classify binocular and accommodative status';
+    desc.textContent = 'Encode distance and near lateral phorias, NPC, fusional vergence reserves, and accommodative findings to activate the diagnostic evaluation for Convergence Insufficiency/Excess, Divergence Insufficiency/Excess, Basic Exo/Eso, Fusional Vergence Dysfunction, or Accommodative Dysfunctions.';
+    mgmt.innerHTML = '';
+    return;
+  }
+
+  const dExo = dPhoria !== null ? dPhoria : 0;
+  const nExo = nPhoria !== null ? nPhoria : 0;
+  const phoriaDiff = nExo - dExo; // Positive = more Exo at near; Negative = more Eso at near
+
+  let matched = null;
+
+  // Convergence Insufficiency (CI)
+  if (phoriaDiff >= 4.0 && (npcBreak > 5.0 || (nBoBreak !== null && nBoBreak < 15) || (nBoBlur !== null && nBoBlur < 12))) {
+    matched = {
+      tag: 'CONVERGENCE INSUFFICIENCY (CI)',
+      title: 'Convergence Insufficiency (High Evidence / CITT Protocol)',
+      desc: `Patient exhibits significantly greater exophoria at near (${fmt(nExo, 1)}Δ) compared to distance (${fmt(dExo, 1)}Δ), receded NPC (${npcBreak ? fmt(npcBreak, 1) + ' cm' : 'receded'}), and deficient positive fusional vergence reserves.`,
+      mgmt: [
+        'Office-Based Vergence / Accommodative Therapy with home reinforcement is the primary treatment of choice (proven by the multi-center Convergence Insufficiency Treatment Trial [CITT], highest Level-1 evidence).',
+        'Base-In relieving prism calculated via Sheard\'s criterion (or reading glasses with BI prism) if vision therapy is delayed or not feasible.',
+        'Home-based computer vergence therapy as a secondary alternative if in-office therapy is unavailable.'
+      ]
+    };
+  }
+  // Convergence Excess (CE)
+  else if (phoriaDiff <= -3.0 && nExo < 0) {
+    matched = {
+      tag: 'CONVERGENCE EXCESS (CE)',
+      title: 'Convergence Excess (Near Esophoria / High AC/A Trend)',
+      desc: `Patient shows clinically significant esophoria at near (${fmt(Math.abs(nExo), 1)}Δ Eso) with reduced near negative fusional vergence (BI) and elevated accommodative lag / high AC/A ratio.`,
+      mgmt: [
+        'Added plus lenses (+1.00 D to +2.00 D reading add or PAL/bifocal) at near to relieve accommodative demand and decrease the near esophoric angle.',
+        'Vergence therapy to expand Negative Fusional Vergence (Base-In reserves) at near and improve binocular accommodative facility.',
+        'Base-Out prism if symptomatic at near and plus acceptance is limited.'
+      ]
+    };
+  }
+  // Divergence Insufficiency (DI)
+  else if (dExo <= -3.0 && phoriaDiff >= 3.0 && dExo < nExo) {
+    matched = {
+      tag: 'DIVERGENCE INSUFFICIENCY (DI)',
+      title: 'Divergence Insufficiency (Distance Esophoria Predominance)',
+      desc: `Marked esophoria at distance (${fmt(Math.abs(dExo), 1)}Δ Eso) compared to near, with deficient distance base-in (NFV) reserves. Comitant deviation.`,
+      mgmt: [
+        'Carefully verify comitance in 9 gazes and rule out cranial nerve VI paresis or systemic/neurological etiologies if recent or sudden onset.',
+        'Base-Out relieving prism prescribed primarily for full-time distance wear.',
+        'Vergence therapy to expand distance divergence reserves.'
+      ]
+    };
+  }
+  // Divergence Excess (DE)
+  else if (dExo >= 6.0 && phoriaDiff <= -4.0) {
+    matched = {
+      tag: 'DIVERGENCE EXCESS (DE)',
+      title: 'Divergence Excess (High Distance Exophoria)',
+      desc: `Distance exophoria (${fmt(dExo, 1)}Δ) is significantly greater than near phoria, with normal near point of convergence and high AC/A characteristics.`,
+      mgmt: [
+        'Office-based vision therapy to establish diplopia awareness and strong voluntary convergence.',
+        'Over-minus lenses to stimulate accommodative convergence if patient is young and accommodation is robust.',
+        'Relieving Base-In prism if conservative therapy is insufficient.'
+      ]
+    };
+  }
+  // Basic Exophoria
+  else if (dExo >= 4.0 && nExo >= 4.0 && Math.abs(phoriaDiff) < 4.0) {
+    matched = {
+      tag: 'BASIC EXOPHORIA',
+      title: 'Basic Exophoria (Equal Distance & Near Exophoria)',
+      desc: `Exophoria of similar magnitude at distance (${fmt(dExo, 1)}Δ) and near (${fmt(nExo, 1)}Δ) with normal AC/A ratio and reduced positive fusional reserves across both distances.`,
+      mgmt: [
+        'Vision therapy designed to build positive fusional vergence (BO) at both distance and near.',
+        'Relieving Base-In prism (Sheard\'s demand) for full-time refractive correction if therapy is not elected.'
+      ]
+    };
+  }
+  // Basic Esophoria
+  else if (dExo <= -2.0 && nExo <= -2.0 && Math.abs(phoriaDiff) < 3.0) {
+    matched = {
+      tag: 'BASIC ESOPHORIA',
+      title: 'Basic Esophoria (Equal Distance & Near Esophoria)',
+      desc: `Esophoria of similar magnitude at distance and near with reduced negative fusional vergence (BI) reserves.`,
+      mgmt: [
+        'Full distance hyperopic correction determined via cycloplegic or static retinoscopy.',
+        'Base-Out prism prescription for relieving prism demand.',
+        'Divergence vergence therapy.'
+      ]
+    };
+  }
+  // Fusional Vergence Dysfunction (FVD)
+  else if (Math.abs(dExo) <= 2.0 && Math.abs(nExo) <= 3.0 &&
+           ((nBoBreak !== null && nBoBreak < 15) || (nBiBreak !== null && nBiBreak < 15)) &&
+           (baf !== null && baf < 4)) {
+    matched = {
+      tag: 'FUSIONAL VERGENCE DYSFUNCTION (FVD)',
+      title: 'Fusional Vergence Dysfunction (Normal Alignment, Deficient Reserves)',
+      desc: 'Normal distance and near phorias (orthophoria or near ortho), but reduced fusional reserves (both BI and BO) and poor binocular accommodative facility.',
+      mgmt: [
+        'Office-based vision therapy is the primary definitive treatment (high success rate).',
+        'Prisms and plus lenses are not indicated because phorias are ortho/normal.'
+      ]
+    };
+  }
+  // Accommodative Insufficiency
+  else if (amp !== null && age !== null && amp < (15 - 0.25 * age)) {
+    matched = {
+      tag: 'ACCOMMODATIVE INSUFFICIENCY (AI)',
+      title: 'Accommodative Insufficiency (Amplitude Below Hofstetter Minimum)',
+      desc: `Accommodative push-up amplitude (${fmt(amp, 1)} D) is below Hofstetter's minimum norm for age ${age} (${fmt(15 - 0.25 * age, 1)} D).`,
+      mgmt: [
+        'Near reading add (bifocal / progressive or reading glasses) to eliminate near visual strain.',
+        'Accommodative vision therapy (monocular and binocular flipper techniques) to restore accommodative amplitude and facility.'
+      ]
+    };
+  }
+  // Normal / Balanced
+  else {
+    matched = {
+      tag: 'BALANCED BINOCULAR FUNCTION',
+      title: 'Findings Within Normal Limits / Borderline Tolerance',
+      desc: `Distance phoria (${fmt(dExo, 1)}Δ) and near phoria (${fmt(nExo, 1)}Δ) are within expected Morgan normative ranges, with adequate compensating reserves.`,
+      mgmt: [
+        'Routine visual hygiene and ergonomic counsel for near computer tasks.',
+        'Re-evaluate if patient reports intermittent asthenopia, diplopia, or visual fatigue.'
+      ]
+    };
+  }
+
+  tag.textContent = matched.tag;
+  title.textContent = matched.title;
+  desc.textContent = matched.desc;
+  mgmt.innerHTML = matched.mgmt.map(m => `<li>${m}</li>`).join('');
+}
+
+// Scheiman Patient Presets
+const PRESET_SCHEIMAN_CI = {
+  s_age: 22, s_ret4: -0.50, s_mem: 0.75,
+  s_d_phoria: 1.0, s_d_bi_break: 8, s_d_bi_rec: 5, s_d_bo_blur: 9, s_d_bo_break: 19, s_d_bo_rec: 10, s_d_vert_phoria: 0.0,
+  s_npc_break: 11.0, s_npc_rec: 15.0,
+  s_n_phoria: 10.0, s_n_phoria_plus1: 8.0,
+  s_n_bi_blur: 14, s_n_bi_break: 22, s_n_bi_rec: 14,
+  s_n_bo_blur: 10, s_n_bo_break: 12, s_n_bo_rec: 6,
+  s_amp: 12.0, s_baf: 3, s_maf: 11, s_nra: 2.25, s_pra: -2.50
+};
+
+const PRESET_SCHEIMAN_CE = {
+  s_age: 18, s_ret4: 0.25, s_mem: 1.25,
+  s_d_phoria: -1.0, s_d_bi_break: 7, s_d_bi_rec: 4, s_d_bo_blur: 9, s_d_bo_break: 19, s_d_bo_rec: 10, s_d_vert_phoria: 0.0,
+  s_npc_break: 3.5, s_npc_rec: 5.0,
+  s_n_phoria: -7.0, s_n_phoria_plus1: -1.0,
+  s_n_bi_blur: 7, s_n_bi_break: 11, s_n_bi_rec: 5,
+  s_n_bo_blur: 19, s_n_bo_break: 25, s_n_bo_rec: 16,
+  s_amp: 13.0, s_baf: 2, s_maf: 9, s_nra: 2.50, s_pra: -1.00
+};
+
+const PRESET_SCHEIMAN_BASIC_EXO = {
+  s_age: 26, s_ret4: -1.25, s_mem: 0.50,
+  s_d_phoria: 8.0, s_d_bi_break: 9, s_d_bi_rec: 6, s_d_bo_blur: 6, s_d_bo_break: 11, s_d_bo_rec: 5, s_d_vert_phoria: 0.0,
+  s_npc_break: 4.5, s_npc_rec: 6.5,
+  s_n_phoria: 9.0, s_n_phoria_plus1: 5.0,
+  s_n_bi_blur: 13, s_n_bi_break: 21, s_n_bi_rec: 13,
+  s_n_bo_blur: 11, s_n_bo_break: 14, s_n_bo_rec: 7,
+  s_amp: 10.5, s_baf: 5, s_maf: 10, s_nra: 2.00, s_pra: -2.25
+};
+
+function applyScheimanPatient(preset) {
+  SCHEIMAN_FIELDS.forEach(f => {
+    const val = preset[f.id] ?? null;
+    SCHEIMAN_STATE[f.id] = val;
+    if (f.kind === 'phoria') {
+      const el = document.querySelector(`[data-scheiman-signed="${f.id}"]`);
+      if (el) el.value = val === null ? '' : val;
+      updateScheimanPhoriaPreview(f.id, val);
+    } else {
+      const el = document.querySelector(`[data-scheiman-num="${f.id}"]`);
+      if (el) el.value = val === null ? '' : val;
+    }
+  });
+  evaluateScheiman();
+}
+
+function clearScheimanPatient() {
+  SCHEIMAN_FIELDS.forEach(f => {
+    SCHEIMAN_STATE[f.id] = null;
+    if (f.kind === 'phoria') {
+      const el = document.querySelector(`[data-scheiman-signed="${f.id}"]`);
+      if (el) el.value = '';
+      updateScheimanPhoriaPreview(f.id, null);
+    } else {
+      const el = document.querySelector(`[data-scheiman-num="${f.id}"]`);
+      if (el) el.value = '';
+    }
+  });
+  evaluateScheiman();
+}
+
+// Initialize Scheiman tables and controls
+renderScheimanTables();
+evaluateScheiman();
+
+const btnScheimanCI = document.getElementById('btnScheimanCI');
+const btnScheimanCE = document.getElementById('btnScheimanCE');
+const btnScheimanExo = document.getElementById('btnScheimanExo');
+const btnScheimanReset = document.getElementById('btnScheimanReset');
+
+if (btnScheimanCI) btnScheimanCI.addEventListener('click', () => applyScheimanPatient(PRESET_SCHEIMAN_CI));
+if (btnScheimanCE) btnScheimanCE.addEventListener('click', () => applyScheimanPatient(PRESET_SCHEIMAN_CE));
+if (btnScheimanExo) btnScheimanExo.addEventListener('click', () => applyScheimanPatient(PRESET_SCHEIMAN_BASIC_EXO));
+if (btnScheimanReset) btnScheimanReset.addEventListener('click', clearScheimanPatient);

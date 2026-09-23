@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>OEP Visual Analysis Assistant</title>
+  <title>Visual Analysis Assistant</title>
   <meta name="theme-color" content="#16233F">
-  <meta name="description" content="Clinical decision-support mock-up for Dr. Leo Manas' 21-Point Visual Analysis and Case Chaining framework.">
+  <meta name="description" content="Clinical decision-support assistant for Optometric Visual Analysis — Dr. Leo Manas' 21-Point framework and Dr. Mitchell Scheiman's binocular vision reference.">
   
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%2316233F%22/><circle cx=%2250%22 cy=%2250%22 r=%2234%22 fill=%22none%22 stroke=%22%23A8792B%22 stroke-width=%224%22/><text x=%2250%22 y=%2258%22 font-family=%22Georgia,serif%22 font-size=%2228%22 fill=%22%23F5F6F2%22 text-anchor=%22middle%22>21</text></svg>">
@@ -14,25 +14,52 @@
 <body>
 
 <header class="nameplate">
-  <div class="brand">
-    <div class="brand-mark">21°</div>
-    <div class="brand-text">
-      <h1>OEP Visual Analysis Assistant</h1>
-      <p>Manas 21&#8209;Point &middot; Case Chaining Engine</p>
+  <div class="nameplate-row">
+    <div class="brand">
+      <div class="brand-mark" id="brandMark">21°</div>
+      <div class="brand-text">
+        <h1>Visual Analysis Assistant</h1>
+        <p id="brandSubtitle">Manas 21&#8209;Point &middot; Case Chaining Engine</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="pwa-badge" id="pwaStatus"><span class="pwa-dot"></span> Offline&#8209;ready</span>
+      <button class="btn-ghost" id="installBtn" hidden>Install App</button>
+      <div class="manas-presets" id="manasPresets">
+        <button class="btn-preset" id="btnB1">Sample B1 Case</button>
+        <button class="btn-preset" id="btnB2">Sample B2 Case</button>
+        <button class="btn-preset" id="btnC">Sample C Case</button>
+        <button class="btn-preset" id="btnVT12">Sample VT 12 Case</button>
+        <button class="btn-reset" id="resetBtn">Reset</button>
+      </div>
+      <div class="scheiman-presets" id="scheimanPresets" style="display: none;">
+        <button class="btn-preset" id="btnScheimanCI">Sample CI Case</button>
+        <button class="btn-preset" id="btnScheimanCE">Sample CE Case</button>
+        <button class="btn-preset" id="btnScheimanExo">Sample Basic Exo</button>
+        <button class="btn-reset" id="btnScheimanReset">Reset</button>
+      </div>
     </div>
   </div>
-  <div class="header-actions">
-    <span class="pwa-badge" id="pwaStatus"><span class="pwa-dot"></span> Offline&#8209;ready</span>
-    <button class="btn-ghost" id="installBtn" hidden>Install App</button>
-    <button class="btn-preset" id="btnB1">Sample B1 Case</button>
-    <button class="btn-preset" id="btnB2">Sample B2 Case</button>
-    <button class="btn-preset" id="btnC">Sample C Case</button>
-    <button class="btn-preset" id="btnVT12">Sample VT 12 Case</button>
-    <button class="btn-reset" id="resetBtn">Reset</button>
-  </div>
+  <nav class="framework-nav" role="tablist" aria-label="Visual Analysis Frameworks">
+    <button type="button" class="nav-tab active" role="tab" id="tab-manas" aria-selected="true" aria-controls="panel-manas" tabindex="0">
+      <span class="nav-tab-badge">21-POINT</span>
+      <span class="nav-tab-title">Leo Manas</span>
+      <span class="nav-tab-sub">Case Chaining Engine</span>
+    </button>
+    <button type="button" class="nav-tab" role="tab" id="tab-scheiman" aria-selected="false" aria-controls="panel-scheiman" tabindex="-1">
+      <span class="nav-tab-badge">BV &amp; ACCOMMODATION</span>
+      <span class="nav-tab-title">Mitchell Scheiman</span>
+      <span class="nav-tab-sub">Clinical Reference</span>
+    </button>
+  </nav>
 </header>
 
 <main>
+
+  <!-- ============================================================
+       TAB PANEL 1: LEO MANAS (DEFAULT)
+  ============================================================= -->
+  <div id="panel-manas" class="tab-panel active" role="tabpanel" aria-labelledby="tab-manas">
 
   <div class="app-intro">
     <div>
@@ -150,12 +177,34 @@
     </div>
 
     <div class="card" id="card-vt12-diag">
-      <div class="card-head"><h2>Vertical Reserve Analyzer</h2><span class="sub">Point #12 &middot; Sheard's</span></div>
+      <div class="card-head">
+        <div>
+          <h2>Vertical Reserve Analyzer</h2>
+          <span class="sub">Point #12 &middot; Sheard's Vertical Criterion</span>
+        </div>
+        <span class="sub formula-pill">S = &frac23;D &minus; &frac13;R</span>
+      </div>
       <div style="padding:16px 18px;">
-        <div class="kv-row"><span class="k">Vertical Phoria (#12a)</span><span class="v" id="vtPhoriaVal">&mdash;</span></div>
-        <div class="kv-row"><span class="k">Compensating Reserve</span><span class="v" id="vtCompReserveVal">&mdash;</span></div>
-        <div class="kv-row"><span class="k">Sheard's Demand</span><span class="v" id="vtSheardDemandVal">&mdash;</span></div>
-        <div class="kv-row"><span class="k">Suggested Relieving Prism</span><span class="v" id="vtPrismVal" style="color:var(--brass);">&mdash;</span></div>
+        <div class="formula-legend-box">
+          <div class="fl-header">
+            <span class="fl-title">Sheard's Vertical Formula:</span>
+            <code class="fl-code">S = (2D &minus; R) / 3</code>
+          </div>
+          <ul class="fl-list">
+            <li><strong class="fl-term">S</strong> <span class="fl-def"><strong>Prism Demand:</strong> Suggested relieving vertical prism to prescribe (Δ BD/BU).</span></li>
+            <li><strong class="fl-term">D</strong> <span class="fl-def"><strong>Vertical Phoria (#12a):</strong> Magnitude of Hyperphoria (Δ).</span></li>
+            <li><strong class="fl-term">R</strong> <span class="fl-def"><strong>Compensating Duction (#12b):</strong> Opposing vertical recovery point (Δ).</span></li>
+          </ul>
+          <div class="fl-rule">
+            <span class="fl-rule-badge">Rule</span>
+            <span>Compensating vertical recovery must be at least twice the vertical phoria (<strong>R &ge; 2D</strong>).</span>
+          </div>
+        </div>
+
+        <div class="kv-row"><span class="k">Vertical Phoria (D = #12a)</span><span class="v" id="vtPhoriaVal">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Compensating Reserve (R)</span><span class="v" id="vtCompReserveVal">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Sheard's Demand (2 &times; D)</span><span class="v" id="vtSheardDemandVal">&mdash;</span></div>
+        <div class="kv-row"><span class="k">Suggested Relieving Prism (S)</span><span class="v" id="vtPrismVal" style="color:var(--brass);">&mdash;</span></div>
         <div class="kv-row"><span class="k">Vertical Compensation</span><span class="v" id="vtStatusBadge">&mdash;</span></div>
       </div>
     </div>
@@ -184,7 +233,464 @@
     </div>
   </section>
 
-  <footer>OEP Visual Analysis Assistant &middot; educational mock&#8209;up of the Manas 21&#8209;Point framework &middot; not a substitute for clinical judgment</footer>
+  </div><!-- /#panel-manas -->
+
+  <!-- ============================================================
+       TAB PANEL 2: MITCHELL SCHEIMAN (INTERACTIVE CLINICAL FORM)
+  ============================================================= -->
+  <div id="panel-scheiman" class="tab-panel" role="tabpanel" aria-labelledby="tab-scheiman" hidden>
+    
+    <div class="app-intro">
+      <div>
+        <p class="eyebrow">Scheiman &amp; Wick Clinical Battery &mdash; Decision Support</p>
+        <p>Enter optometric findings below. Test results are compared against <strong>Morgan's Table of Norms</strong> in real time. For tests with direct correspondence to the <strong>21 Visual Steps</strong>, the parallel <strong>Visual Test No.</strong> (#8, #9, #10, #11, #12a, #13b, #16, #17, #19, #20, #21, #4, #6) is shown alongside. Horizontal phorias use signed notation (<strong>Exo (+), Ortho (0), Eso (&minus;)</strong>).</p>
+      </div>
+    </div>
+
+    <!-- BADGE LEGEND — Morgan's Norms -->
+    <section class="legend-bar" aria-label="Scheiman status badge legend">
+      <span class="legend-title">Morgan's status legend</span>
+      <span class="legend-item"><span class="badge wnl">WNL</span> within Morgan's expected</span>
+      <span class="legend-item"><span class="badge high">HIGH (H)</span> above expected</span>
+      <span class="legend-item"><span class="badge low">LOW (L)</span> below expected reserve / norm</span>
+      <span class="legend-item"><span class="badge amber">RECEDED</span> receded NPC / borderline</span>
+      <span class="legend-item"><span class="badge idle">&mdash;</span> not yet encoded</span>
+    </section>
+
+    <!-- SECTION 1 — REFRACTIVE & BASELINE FINDINGS -->
+    <section class="card" id="card-scheiman-baseline">
+      <div class="card-head">
+        <h2>Refractive Baseline &amp; Patient</h2>
+        <span class="sub">Age &middot; Retinoscopy &middot; Dynamic Lag</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th style="width:105px;">Test No.</th>
+            <th>Finding</th>
+            <th>Encoded</th>
+            <th>Morgan's Expected</th>
+            <th style="width:90px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-scheiman-baseline"></tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 2 — DISTANCE FINDINGS (6M) -->
+    <section class="card" id="card-scheiman-distance">
+      <div class="card-head">
+        <h2>Distance Findings <span class="sub">(6&nbsp;m)</span></h2>
+        <span class="sub">Phoria &middot; Base-In &middot; Base-Out</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th style="width:105px;">Test No.</th>
+            <th>Finding</th>
+            <th>Encoded</th>
+            <th>Morgan's Expected</th>
+            <th style="width:90px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-scheiman-distance"></tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 3 — NEARPOINT FINDINGS (40CM) -->
+    <section class="card" id="card-scheiman-near">
+      <div class="card-head">
+        <h2>Nearpoint Findings <span class="sub">(40&nbsp;cm)</span></h2>
+        <span class="sub">NPC &middot; Phoria &middot; Base-In &middot; Base-Out</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th style="width:105px;">Test No.</th>
+            <th>Finding</th>
+            <th>Encoded</th>
+            <th>Morgan's Expected</th>
+            <th style="width:90px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-scheiman-near"></tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 4 — ACCOMMODATIVE BATTERY -->
+    <section class="card" id="card-scheiman-accomm">
+      <div class="card-head">
+        <h2>Accommodative Battery</h2>
+        <span class="sub">Amplitude &middot; Facility &middot; Relative Accomm.</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th style="width:105px;">Test No.</th>
+            <th>Finding</th>
+            <th>Encoded</th>
+            <th>Morgan's Expected</th>
+            <th style="width:90px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-scheiman-accomm"></tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 5 — DIAGNOSTIC CALCULATIONS & PRESCRIBING SOLVERS -->
+    <section class="diag-grid">
+      <div class="card">
+        <div class="card-head"><h2>AC/A Ratio (Gradient)</h2><span class="sub">Point #13b+1.00 &minus; #13b</span></div>
+        <div class="gauge-wrap">
+          <svg id="scheimanAcaGauge" width="220" height="130" viewBox="0 0 220 130" aria-hidden="true"></svg>
+          <div class="gauge-value" id="scheimanAcaValue">&mdash;</div>
+          <div class="gauge-label" id="scheimanAcaLabel">Enter Near phorias to calculate</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Sheard's Criterion Solver</h2>
+            <span class="sub">Primary for Exophoria</span>
+          </div>
+          <span class="sub formula-pill">S = &frac23;D &minus; &frac13;R</span>
+        </div>
+        <div style="padding:16px 18px;">
+          <div class="formula-legend-box">
+            <div class="fl-header">
+              <span class="fl-title">Sheard's Formula Legend</span>
+            </div>
+            <ul class="fl-list">
+              <li><strong class="fl-term">S</strong> <span class="fl-def"><strong>Prism Demand:</strong> Suggested relieving Base-In prism to prescribe (Δ). If S &le; 0, reserve is adequate.</span></li>
+              <li><strong class="fl-term">D</strong> <span class="fl-def"><strong>Phoria Demand:</strong> Magnitude of Exophoria demand (Δ).</span></li>
+              <li><strong class="fl-term">R</strong> <span class="fl-def"><strong>Compensating Reserve:</strong> Opposing Base-Out (PFV) blur or break point (Δ).</span></li>
+            </ul>
+            <div class="fl-rule">
+              <span class="fl-rule-badge">Rule</span>
+              <span>Compensating reserve must be at least twice the phoria (<strong>R &ge; 2D</strong>) for comfortable single binocular vision without asthenopia.</span>
+            </div>
+          </div>
+
+          <div class="kv-row"><span class="k">Demand (D = Phoria)</span><span class="v" id="sheardDemandVal">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Compensating Reserve (R = BO)</span><span class="v" id="sheardReserveVal">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Required Reserve (2 &times; D)</span><span class="v" id="sheardReqVal">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Prism Prescribing Demand (S)</span><span class="v" id="sheardPrismVal" style="color:var(--brass);font-weight:700;">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Clinical Status</span><span class="v" id="sheardStatusBadge">&mdash;</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Percival's Criterion Solver</h2>
+            <span class="sub">Primary for Esophoria</span>
+          </div>
+          <span class="sub formula-pill">P = &frac13;G &minus; &frac23;L</span>
+        </div>
+        <div style="padding:16px 18px;">
+          <div class="formula-legend-box">
+            <div class="fl-header">
+              <span class="fl-title">Percival's Formula Legend</span>
+            </div>
+            <ul class="fl-list">
+              <li><strong class="fl-term">P</strong> <span class="fl-def"><strong>Prism Demand:</strong> Suggested relieving Base-Out prism to prescribe (Δ). If P &le; 0, vergence is balanced.</span></li>
+              <li><strong class="fl-term">G</strong> <span class="fl-def"><strong>Greater Reserve:</strong> Larger opposing vergence break (typically BO in Δ).</span></li>
+              <li><strong class="fl-term">L</strong> <span class="fl-def"><strong>Lesser Reserve:</strong> Smaller opposing vergence break (typically BI in Δ).</span></li>
+            </ul>
+            <div class="fl-rule">
+              <span class="fl-rule-badge">Rule</span>
+              <span>Patient must operate in middle third of total vergence zone (<strong>L &ge; &frac12;G</strong>). Does not require blur point or phoria.</span>
+            </div>
+          </div>
+
+          <div class="kv-row"><span class="k">Greater Reserve (G = BO)</span><span class="v" id="percivalGreaterVal">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Lesser Reserve (L = BI)</span><span class="v" id="percivalLesserVal">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Middle-Third Zone Check</span><span class="v" id="percivalZoneVal">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Prism Prescribing Demand (P)</span><span class="v" id="percivalPrismVal" style="color:var(--brass);font-weight:700;">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Clinical Status</span><span class="v" id="percivalStatusBadge">&mdash;</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>1:1 Rule &amp; Accommodative Analyzer</h2>
+            <span class="sub">Esophoria &middot; Near Lag</span>
+          </div>
+          <span class="sub formula-pill">Prism = (Eso &minus; Rec) / 2</span>
+        </div>
+        <div style="padding:16px 18px;">
+          <div class="formula-legend-box">
+            <div class="fl-header">
+              <span class="fl-title">1:1 Rule Formula Legend</span>
+            </div>
+            <ul class="fl-list">
+              <li><strong class="fl-term">Eso</strong> <span class="fl-def"><strong>Near Esophoria:</strong> Magnitude of near esophoria (Δ).</span></li>
+              <li><strong class="fl-term">Rec</strong> <span class="fl-def"><strong>Base-Out Recovery:</strong> Recovery of single binocular vision at near (Δ).</span></li>
+            </ul>
+            <div class="fl-rule">
+              <span class="fl-rule-badge">Rule</span>
+              <span>Recovery should equal or exceed phoria demand. If recovery &lt; esophoria, relieving BO prism is indicated.</span>
+            </div>
+          </div>
+
+          <div class="kv-row"><span class="k">1:1 Rule Prism (Near Eso)</span><span class="v" id="rule1to1Val" style="color:var(--brass);font-weight:700;">&mdash;</span></div>
+          <div class="kv-row"><span class="k">MEM Accommodative Lag</span><span class="v" id="scheimanMemVal">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Accommodative Facility (BAF)</span><span class="v" id="scheimanBafVal">&mdash;</span></div>
+          <div class="kv-row"><span class="k">Accommodative Status</span><span class="v" id="scheimanAccommStatus">&mdash;</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6 — SCHEIMAN & WICK CLINICAL CLASSIFICATION -->
+    <section class="card chain-card" id="card-scheiman-diag">
+      <div class="card-head" style="border-bottom:none;">
+        <h2>Scheiman &amp; Wick Clinical Classification</h2>
+        <span class="sub">Differential Diagnostic Matcher</span>
+      </div>
+
+      <div class="syndrome-result" id="scheimanDiagBox">
+        <span class="type-tag" id="scheimanDiagTag">AWAITING CLINICAL DATA</span>
+        <h3 id="scheimanDiagTitle">Enter findings above to classify binocular and accommodative status</h3>
+        <p id="scheimanDiagDesc">Encode distance and near lateral phorias, NPC, fusional vergence reserves, and accommodative findings to activate the diagnostic evaluation for Convergence Insufficiency/Excess, Divergence Insufficiency/Excess, Basic Exo/Eso, Fusional Vergence Dysfunction, or Accommodative Dysfunctions.</p>
+        <ul class="mgmt-list" id="scheimanMgmtList"></ul>
+      </div>
+    </section>
+
+    <!-- SECTION 7 — COLLAPSIBLE MORGAN'S NORMS REFERENCE TABLE -->
+    <details class="scheiman-ref-details">
+      <summary class="scheiman-ref-summary">
+        <span>📖 View Morgan's System of Normative Values Reference Table</span>
+      </summary>
+      <div class="scheiman-ref-body">
+        <div class="table-wrap">
+          <table class="scheiman-table">
+            <thead>
+              <tr>
+                <th style="width:14%;">Visual Test No.</th>
+                <th style="width:28%;">Clinical Finding</th>
+                <th style="width:23%;">Test Condition</th>
+                <th style="width:20%;">Expected Mean Norm</th>
+                <th style="width:15%;">Standard Dev.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="oep-no">Pt. #8</span></td><td><strong>Distance Lateral Phoria</strong></td><td>6 m (Von Graefe / Maddox)</td><td><span class="norm-val">1Δ Exophoria</span></td><td>&plusmn; 2.00Δ</td></tr>
+              <tr><td><span class="oep-no">Pt. #11</span></td><td><strong>Distance BI Vergence (NFV)</strong></td><td>6 m smooth vergence</td><td><span class="norm-val">&times; / 7 / 4</span></td><td>&plusmn; 3 / &plusmn; 2</td></tr>
+              <tr><td><span class="oep-no">Pt. #9, #10</span></td><td><strong>Distance BO Vergence (PFV)</strong></td><td>6 m smooth vergence</td><td><span class="norm-val">9 / 19 / 10</span></td><td>&plusmn; 4 / &plusmn; 8 / &plusmn; 4</td></tr>
+              <tr><td><span class="oep-no">Pt. #12a</span></td><td><strong>Distance Vertical Phoria</strong></td><td>6 m Maddox / Von Graefe</td><td><span class="norm-val">Ortho (0Δ)</span></td><td>&plusmn; 0.5Δ</td></tr>
+              <tr><td><span class="oep-no">—</span></td><td><strong>Near Point of Convergence (NPC)</strong></td><td>Accommodative target (TTM)</td><td><span class="norm-val">Break &lt; 5 cm</span></td><td>Rec &lt; 7 cm</td></tr>
+              <tr><td><span class="oep-no">Pt. #13b</span></td><td><strong>Near Lateral Phoria</strong></td><td>40 cm (Von Graefe)</td><td><span class="norm-val">3Δ Exophoria</span></td><td>&plusmn; 3.00Δ</td></tr>
+              <tr><td><span class="oep-no">Pt. #13b+1.00</span></td><td><strong>Gradient AC/A Ratio</strong></td><td>+1.00 D at 40 cm</td><td><span class="norm-val">4 : 1</span></td><td>&plusmn; 2 : 1</td></tr>
+              <tr><td><span class="oep-no">Pt. #17a, #17b</span></td><td><strong>Near BI Vergence (NFV)</strong></td><td>40 cm smooth vergence</td><td><span class="norm-val">13 / 21 / 13</span></td><td>&plusmn; 4 / &plusmn; 4 / &plusmn; 5</td></tr>
+              <tr><td><span class="oep-no">Pt. #16a, #16b</span></td><td><strong>Near BO Vergence (PFV)</strong></td><td>40 cm smooth vergence</td><td><span class="norm-val">17 / 21 / 11</span></td><td>&plusmn; 5 / &plusmn; 6 / &plusmn; 7</td></tr>
+              <tr><td><span class="oep-no">Pt. #19</span></td><td><strong>Accommodative Amplitude</strong></td><td>Push-up / Hofstetter</td><td><span class="norm-val">18.5 &minus; 0.30&middot;Age</span></td><td>Min: 15 &minus; 0.25&middot;Age</td></tr>
+              <tr><td><span class="oep-no">—</span></td><td><strong>Binocular Accomm. Facility (BAF)</strong></td><td>&plusmn;2.00 D flipper (40 cm)</td><td><span class="norm-val">8 cpm</span></td><td>&plusmn; 5.0 cpm</td></tr>
+              <tr><td><span class="oep-no">—</span></td><td><strong>Monocular Accomm. Facility (MAF)</strong></td><td>&plusmn;2.00 D flipper (40 cm)</td><td><span class="norm-val">11 cpm</span></td><td>&plusmn; 5.0 cpm</td></tr>
+              <tr><td><span class="oep-no">Pt. #6</span></td><td><strong>MEM Retinoscopy</strong></td><td>40 cm dynamic card</td><td><span class="norm-val">+0.50 D</span></td><td>&plusmn; 0.25 D</td></tr>
+              <tr><td><span class="oep-no">Pt. #21</span></td><td><strong>NRA</strong></td><td>Plus to blur at 40 cm</td><td><span class="norm-val">+2.00 D</span></td><td>&plusmn; 0.50 D</td></tr>
+              <tr><td><span class="oep-no">Pt. #20</span></td><td><strong>PRA</strong></td><td>Minus to blur at 40 cm</td><td><span class="norm-val">&minus;2.37 D</span></td><td>&plusmn; 1.00 D</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <!-- SECTION 8 — CLINICAL DIAGNOSTIC SUMMARY REFERENCE TABLE -->
+    <section class="card" id="card-clinical-summary-ref" style="margin-top:20px;">
+      <div class="card-head">
+        <div>
+          <h2>Clinical Diagnostic Summary Reference</h2>
+          <span class="sub">Scheiman &amp; Wick Nonstrabismic Binocular &amp; Accommodative Anomalies Matrix</span>
+        </div>
+        <span class="sub" style="font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);">11 Conditions &middot; 12 Parameters</span>
+      </div>
+
+      <div class="table-wrap clinical-summary-wrap">
+        <table class="clinical-summary-table">
+          <thead>
+            <tr>
+              <th scope="col" class="sticky-col">Condition</th>
+              <th scope="col">Cover Test</th>
+              <th scope="col">AC/A Ratio</th>
+              <th scope="col">NPC</th>
+              <th scope="col">Vergence Amplitude</th>
+              <th scope="col">Vergence Facility</th>
+              <th scope="col">Stereopsis</th>
+              <th scope="col">Accommodative Amplitude</th>
+              <th scope="col">Binocular Accommodative Facility</th>
+              <th scope="col">Monocular Accommodative Facility</th>
+              <th scope="col">NRA and PRA</th>
+              <th scope="col">Monocular Estimation Method</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="sticky-col"><strong>Accommodative insufficiency</strong></td>
+              <td>No predictable pattern</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>BO blur at near may be low</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-low">Low</span></td>
+              <td><span class="c-tag c-fail">Fails &minus;</span></td>
+              <td><span class="c-tag c-fail">Fails &minus;</span></td>
+              <td>Low PRA</td>
+              <td><span class="c-tag c-high">High</span></td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Ill-sustained accommodation</strong></td>
+              <td>No predictable pattern</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>BO blur at near may be low</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-fail">Fails &minus;</span></td>
+              <td><span class="c-tag c-fail">Fails &minus;</span></td>
+              <td>Low PRA</td>
+              <td><span class="c-tag c-high">High</span></td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Accommodative excess</strong></td>
+              <td>No predictable pattern</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>BI blur at near may be low</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-fail">Fails +</span></td>
+              <td><span class="c-tag c-fail">Fails +</span></td>
+              <td>Low NRA</td>
+              <td><span class="c-tag c-low">Low</span></td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Accommodative infacility</strong></td>
+              <td>No predictable pattern</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>BO and BI blur at near may be low</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-fail">Fails +/&minus;</span></td>
+              <td><span class="c-tag c-fail">Fails +/&minus;</span></td>
+              <td>Low NRA and PRA</td>
+              <td>Normal</td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Convergence insufficiency</strong></td>
+              <td>Exo &gt; N</td>
+              <td><span class="c-tag c-low">Low</span></td>
+              <td><span class="c-tag c-flag">Receded</span></td>
+              <td>Low BO</td>
+              <td>Low BO</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-fail">Fails +</span></td>
+              <td>Normal</td>
+              <td>Low NRA</td>
+              <td><span class="c-tag c-low">Low</span></td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Convergence excess</strong></td>
+              <td>Eso &gt; N</td>
+              <td><span class="c-tag c-high">High</span></td>
+              <td>Normal</td>
+              <td>Low BI</td>
+              <td>Low BI</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-fail">Fails &minus;</span></td>
+              <td>Normal</td>
+              <td>Low PRA</td>
+              <td><span class="c-tag c-high">High</span></td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Fusional vergence dysfunction</strong></td>
+              <td>Low eso or low exo</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Low BO and BI</td>
+              <td>Low BO and BI</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-fail">Fails +/&minus;</span></td>
+              <td>Normal</td>
+              <td>Low NRA and PRA</td>
+              <td>Normal</td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Divergence insufficiency</strong></td>
+              <td>Eso &gt; D</td>
+              <td><span class="c-tag c-low">Low</span></td>
+              <td>Normal</td>
+              <td>Low BI at D</td>
+              <td>Low BI at D</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Divergence excess</strong></td>
+              <td>Exo &gt; D</td>
+              <td><span class="c-tag c-high">High</span></td>
+              <td>Normal</td>
+              <td>Low BO at D Low BI at N</td>
+              <td>Low BO at D Low BI at N</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Normal</td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Basic exophoria</strong></td>
+              <td>Equal exo at D and N</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Low BO at D and N</td>
+              <td>Low BO at D and N</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-fail">Fails +</span></td>
+              <td>Normal</td>
+              <td>Low NRA</td>
+              <td><span class="c-tag c-low">Low</span></td>
+            </tr>
+            <tr>
+              <td class="sticky-col"><strong>Basic esophoria</strong></td>
+              <td>Equal eso at D and N</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td>Low BI at D and N</td>
+              <td>Low BI at D and N</td>
+              <td>Normal</td>
+              <td>Normal</td>
+              <td><span class="c-tag c-fail">Fails &minus;</span></td>
+              <td>Normal</td>
+              <td>Low PRA</td>
+              <td><span class="c-tag c-high">High</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="summary-table-footnote">
+        <em>*NPC, near point convergence; NRA, negative relative accommodation; PRA, positive relative accommodation; BO, base-out; BI, base-in; N, near; D, distance.</em>
+      </div>
+    </section>
+
+  </div><!-- /#panel-scheiman -->
+
+  <footer class="app-footer">Visual Analysis Assistant &middot; educational mock&#8209;up (Leo Manas &amp; Mitchell Scheiman frameworks) &middot; not a substitute for clinical judgment</footer>
 </main>
 
 <!-- Shared tooltip popover for the #4/#5/#6 info icons. Kept as a direct

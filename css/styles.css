@@ -460,7 +460,8 @@ main {
   flex-wrap: wrap;
 }
 
-input[type=number] {
+input[type=number],
+input.signed-diopter {
   width: 92px;
   font-family: var(--font-mono);
   font-size: 13.5px;
@@ -475,7 +476,8 @@ input[type=number].signed-input {
   width: 120px;
 }
 
-input[type=number]:focus {
+input[type=number]:focus,
+input.signed-diopter:focus {
   border-color: var(--brass);
   background: #fff;
 }
@@ -1360,7 +1362,7 @@ footer {
   padding: 0;
 }
 
-/* ---------- Formula Legend Boxes (Sheard's, Percival's, 1:1 Rule) ---------- */
+/* ---------- Formula Legend Boxes (Sheard's) ---------- */
 .formula-pill {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1761,7 +1763,7 @@ footer {
   color: var(--high);
 }
 
-/* Hofstetter Normal Ranges Box */
+/* Hofstetter Normal Ranges & Dedicated Age Input Box */
 .hofstetter-box {
   margin: 16px 18px 8px;
   padding: 16px;
@@ -1773,62 +1775,7 @@ footer {
   gap: 12px;
 }
 
-.hof-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-}
-
-.hof-card {
-  background: #FFF;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.hof-badge {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--ink-soft);
-}
-
-.hof-math {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--brass);
-  background: #FFFDF7;
-  border: 1px dashed #DFCBA3;
-  padding: 6px 10px;
-  border-radius: 3px;
-  text-align: center;
-}
-
-.hof-calc-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  margin-top: 2px;
-}
-
-.hof-calc-row .k {
-  color: var(--ink-soft);
-}
-
-.hof-calc-row .v {
-  font-family: var(--font-mono);
-  color: var(--ink);
-  font-size: 13px;
-}
-
-.hof-summary-bar {
+.hof-age-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1837,27 +1784,81 @@ footer {
   padding: 10px 14px;
   background: var(--paper-2);
   border: 1px solid var(--line);
+  border-left: 3px solid var(--brass);
   border-radius: 4px;
+}
+
+.hof-age-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13.5px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.hof-age-label small {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+
+.hof-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.hof-grid-2col {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.hof-card {
+  background: #FFF;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hof-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--brass);
+  border-bottom: 1px dashed var(--line);
+  padding-bottom: 5px;
+}
+
+.hof-calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   font-size: 12.5px;
 }
 
-.hof-stat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.hof-stat .k {
+.hof-calc-row .k {
   color: var(--ink-soft);
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
 }
 
-.hof-stat .v {
+.hof-inline-eq {
   font-family: var(--font-mono);
-  font-weight: 600;
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  opacity: 0.85;
+}
+
+.hof-calc-row .v {
+  font-family: var(--font-mono);
   color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* Field Select Dropdown */

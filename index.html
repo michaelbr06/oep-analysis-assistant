@@ -16,23 +16,23 @@
 <header class="nameplate">
   <div class="nameplate-row">
     <div class="brand">
-      <div class="brand-mark" id="brandMark">21°</div>
+      <div class="brand-mark" id="brandMark">MS</div>
       <div class="brand-text">
         <h1>Visual Analysis Assistant</h1>
-        <p id="brandSubtitle">Manas 21&#8209;Point &middot; Case Chaining Engine</p>
+        <p id="brandSubtitle">Mitchell Scheiman &middot; Binocular Vision &amp; Accommodation</p>
       </div>
     </div>
     <div class="header-actions">
       <span class="pwa-badge" id="pwaStatus"><span class="pwa-dot"></span> Offline&#8209;ready</span>
       <button class="btn-ghost" id="installBtn" hidden>Install App</button>
-      <div class="manas-presets" id="manasPresets">
+      <div class="manas-presets" id="manasPresets" style="display: none;">
         <button class="btn-preset" id="btnB1">Sample B1 Case</button>
         <button class="btn-preset" id="btnB2">Sample B2 Case</button>
         <button class="btn-preset" id="btnC">Sample C Case</button>
         <button class="btn-preset" id="btnVT12">Sample VT 12 Case</button>
         <button class="btn-reset" id="resetBtn">Reset</button>
       </div>
-      <div class="scheiman-presets" id="scheimanPresets" style="display: none;">
+      <div class="scheiman-presets" id="scheimanPresets">
         <button class="btn-preset" id="btnScheimanCI">Sample CI Case</button>
         <button class="btn-preset" id="btnScheimanCE">Sample CE Case</button>
         <button class="btn-preset" id="btnScheimanExo">Sample Basic Exo</button>
@@ -41,15 +41,15 @@
     </div>
   </div>
   <nav class="framework-nav" role="tablist" aria-label="Visual Analysis Frameworks">
-    <button type="button" class="nav-tab active" role="tab" id="tab-manas" aria-selected="true" aria-controls="panel-manas" tabindex="0">
+    <button type="button" class="nav-tab active" role="tab" id="tab-scheiman" aria-selected="true" aria-controls="panel-scheiman" tabindex="0">
+      <span class="nav-tab-badge">BV &amp; ACCOMMODATION</span>
+      <span class="nav-tab-title">Mitchell Scheiman</span>
+      <span class="nav-tab-sub">Clinical Reference &amp; Summary</span>
+    </button>
+    <button type="button" class="nav-tab" role="tab" id="tab-manas" aria-selected="false" aria-controls="panel-manas" tabindex="-1">
       <span class="nav-tab-badge">21-POINT</span>
       <span class="nav-tab-title">Leo Manas</span>
       <span class="nav-tab-sub">Case Chaining Engine</span>
-    </button>
-    <button type="button" class="nav-tab" role="tab" id="tab-scheiman" aria-selected="false" aria-controls="panel-scheiman" tabindex="-1">
-      <span class="nav-tab-badge">BV &amp; ACCOMMODATION</span>
-      <span class="nav-tab-title">Mitchell Scheiman</span>
-      <span class="nav-tab-sub">Clinical Reference</span>
     </button>
   </nav>
 </header>
@@ -57,9 +57,9 @@
 <main>
 
   <!-- ============================================================
-       TAB PANEL 1: LEO MANAS (DEFAULT)
+       TAB PANEL 1: LEO MANAS (SECONDARY)
   ============================================================= -->
-  <div id="panel-manas" class="tab-panel active" role="tabpanel" aria-labelledby="tab-manas">
+  <div id="panel-manas" class="tab-panel" role="tabpanel" aria-labelledby="tab-manas" hidden>
 
   <div class="app-intro">
     <div>
@@ -236,14 +236,14 @@
   </div><!-- /#panel-manas -->
 
   <!-- ============================================================
-       TAB PANEL 2: MITCHELL SCHEIMAN (INTERACTIVE CLINICAL FORM)
+       TAB PANEL 2: MITCHELL SCHEIMAN (DEFAULT / INDEX)
   ============================================================= -->
-  <div id="panel-scheiman" class="tab-panel" role="tabpanel" aria-labelledby="tab-scheiman" hidden>
+  <div id="panel-scheiman" class="tab-panel active" role="tabpanel" aria-labelledby="tab-scheiman">
     
     <div class="app-intro">
       <div>
-        <p class="eyebrow">Scheiman &amp; Wick Clinical Battery &mdash; Decision Support</p>
-        <p>Enter optometric findings below. Test results are compared against <strong>Morgan's Table of Norms</strong> in real time. For tests with direct correspondence to the <strong>21 Visual Steps</strong>, the parallel <strong>Visual Test No.</strong> (#8, #9, #10, #11, #12a, #13b, #16, #17, #19, #20, #21, #4, #6) is shown alongside. Horizontal phorias use signed notation (<strong>Exo (+), Ortho (0), Eso (&minus;)</strong>).</p>
+        <p class="eyebrow">Scheiman &amp; Wick Clinical Battery &mdash; Diagnostic Reference Arrangement</p>
+        <p>Enter optometric findings below arranged in exact alignment with the <strong>Diagnostic Summary Reference Table</strong>. Test results are compared against <strong>Morgan's Table of Norms</strong> and <strong>Hofstetter's Expecteds</strong> in real time. For tests with direct correspondence to the <strong>21 Visual Steps</strong>, the parallel <strong>Visual Test No.</strong> (#8, #9, #10, #11, #12a, #13b, #16, #17, #19, #20, #21, #4, #6) is shown alongside. Horizontal phorias use signed notation (<strong>Exo (+), Ortho (0), Eso (&minus;)</strong>).</p>
       </div>
     </div>
 
@@ -257,12 +257,115 @@
       <span class="legend-item"><span class="badge idle">&mdash;</span> not yet encoded</span>
     </section>
 
-    <!-- SECTION 1 — REFRACTIVE & BASELINE FINDINGS -->
-    <section class="card" id="card-scheiman-baseline">
+    <!-- SECTION 1 — COVER TEST -->
+    <section class="card" id="card-scheiman-cover-test">
       <div class="card-head">
-        <h2>Refractive Baseline &amp; Patient</h2>
-        <span class="sub">Age &middot; Retinoscopy &middot; Dynamic Lag</span>
+        <div>
+          <h2><span class="card-step-num">1</span> Cover Test</h2>
+          <span class="sub">Far &amp; Near Lateral Alignment &middot; Recovery Dynamics</span>
+        </div>
+        <span class="sub" style="font-family:var(--font-mono);font-size:11px;">Pt. #8 &middot; #13b &middot; #12a</span>
       </div>
+      
+      <!-- Cover Test Recovery Dynamics -->
+      <div class="ct-recovery-box">
+        <div class="ct-recovery-header">
+          <span class="ct-recovery-badge">Cover Test Dynamics</span>
+          <span class="ct-recovery-title">Recovery Direction &amp; Speed Assessment</span>
+        </div>
+
+        <div class="ct-dynamics-grid">
+          <!-- (1a) FAR Distance Recovery Direction -->
+          <div class="ct-dynamic-group">
+            <span class="ct-group-label"><strong>(1a) Recovery Direction at FAR Distance (6 m):</strong></span>
+            <div class="ct-radio-group" role="radiogroup" aria-label="FAR distance recovery direction">
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_far_dir" value="eso" id="ctFarEso">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Eso</strong></span>
+                </span>
+              </label>
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_far_dir" value="exo" id="ctFarExo">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Exo</strong></span>
+                </span>
+              </label>
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_far_dir" value="ortho" id="ctFarOrtho">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Ortho</strong></span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- (1b) NEAR Distance Recovery Direction -->
+          <div class="ct-dynamic-group">
+            <span class="ct-group-label"><strong>(1b) Recovery Direction at NEAR Distance (40 cm):</strong></span>
+            <div class="ct-radio-group" role="radiogroup" aria-label="NEAR distance recovery direction">
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_near_dir" value="eso" id="ctNearEso">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Eso</strong></span>
+                </span>
+              </label>
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_near_dir" value="exo" id="ctNearExo">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Exo</strong></span>
+                </span>
+              </label>
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_near_dir" value="ortho" id="ctNearOrtho">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Ortho</strong></span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- (2) Speed of Recovery -->
+          <div class="ct-dynamic-group">
+            <span class="ct-group-label"><strong>(2) Speed of Recovery (Comparison across distances):</strong></span>
+            <div class="ct-radio-group" role="radiogroup" aria-label="Speed of recovery comparison">
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_speed" value="far" id="ctSpeedFar">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Faster at FAR</strong></span>
+                </span>
+              </label>
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_speed" value="near" id="ctSpeedNear">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Faster at NEAR</strong></span>
+                </span>
+              </label>
+              <label class="ct-radio-label">
+                <input type="radio" name="scheiman_ct_speed" value="same" id="ctSpeedSame">
+                <span class="ct-radio-tile">
+                  <span class="ct-radio-dot"></span>
+                  <span class="ct-radio-text"><strong>Same speed at both distances</strong></span>
+                </span>
+              </label>
+              <button type="button" class="btn-text-clear" id="ctDynamicsClear" title="Clear recovery dynamics">&times; Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ct-recovery-hint" id="ctRecoveryHint">
+          <em>Select recovery direction at FAR/NEAR and comparative recovery speed to evaluate binocular motor fusion dynamics.</em>
+        </div>
+      </div>
+
       <table class="field-table">
         <thead>
           <tr>
@@ -273,80 +376,301 @@
             <th style="width:90px;">Status</th>
           </tr>
         </thead>
-        <tbody id="tbl-scheiman-baseline"></tbody>
+        <tbody id="tbl-scheiman-cover-test"></tbody>
       </table>
     </section>
 
-    <!-- SECTION 2 — DISTANCE FINDINGS (6M) -->
-    <section class="card" id="card-scheiman-distance">
+    <!-- SECTION 2 — AGE & ACCOMMODATIVE COMPARISON (NPC, NPA, AOA, HOFSTETTER) -->
+    <section class="card" id="card-scheiman-age-accomm">
       <div class="card-head">
-        <h2>Distance Findings <span class="sub">(6&nbsp;m)</span></h2>
-        <span class="sub">Phoria &middot; Base-In &middot; Base-Out</span>
+        <div>
+          <h2><span class="card-step-num">2</span> Age &amp; Accommodative Comparison</h2>
+          <span class="sub">NPC &middot; NPA &middot; AOA &middot; Hofstetter's Normative Analysis</span>
+        </div>
+        <span class="sub formula-pill">Push-up: AOA = 100 / NPA</span>
       </div>
+
+      <!-- Hofstetter Normal Ranges & Formulas Legend Box -->
+      <div class="hofstetter-box">
+        <div class="hof-header">
+          <span class="fl-title" style="font-weight:700;color:var(--ink);font-size:13px;">Hofstetter's Normal Ranges &amp; Formulas (Push-up Amplitude)</span>
+        </div>
+        <div class="hof-grid">
+          <div class="hof-card">
+            <span class="hof-badge">Minimum Expected</span>
+            <div class="hof-math">15 &minus; 0.25 &times; Age</div>
+            <div class="hof-calc-row">
+              <span class="k">For Patient:</span>
+              <strong class="v" id="hofCalcMinVal">&mdash;</strong>
+            </div>
+          </div>
+          <div class="hof-card">
+            <span class="hof-badge">Average Expected</span>
+            <div class="hof-math">18.5 &minus; 0.30 &times; Age</div>
+            <div class="hof-calc-row">
+              <span class="k">For Patient:</span>
+              <strong class="v" id="hofCalcAvgVal">&mdash;</strong>
+            </div>
+          </div>
+          <div class="hof-card">
+            <span class="hof-badge">Maximum Expected</span>
+            <div class="hof-math">25 &minus; 0.40 &times; Age</div>
+            <div class="hof-calc-row">
+              <span class="k">For Patient:</span>
+              <strong class="v" id="hofCalcMaxVal">&mdash;</strong>
+            </div>
+          </div>
+        </div>
+        <div class="hof-summary-bar" id="hofSummaryBar">
+          <div class="hof-stat"><span class="k">Entered Age:</span> <span class="v" id="hofAgeVal">&mdash;</span></div>
+          <div class="hof-stat"><span class="k">Patient AOA:</span> <span class="v" id="hofAoaVal">&mdash;</span></div>
+          <div class="hof-stat"><span class="k">Equivalent NPA:</span> <span class="v" id="hofNpaVal">&mdash;</span></div>
+          <div class="hof-stat"><span class="k">Hofstetter Status:</span> <span class="v" id="hofAoaStatus">&mdash;</span></div>
+        </div>
+      </div>
+
       <table class="field-table">
         <thead>
           <tr>
             <th style="width:105px;">Test No.</th>
             <th>Finding</th>
             <th>Encoded</th>
-            <th>Morgan's Expected</th>
+            <th>Expected Norm</th>
             <th style="width:90px;">Status</th>
           </tr>
         </thead>
-        <tbody id="tbl-scheiman-distance"></tbody>
+        <tbody id="tbl-scheiman-age-accomm"></tbody>
       </table>
     </section>
 
-    <!-- SECTION 3 — NEARPOINT FINDINGS (40CM) -->
-    <section class="card" id="card-scheiman-near">
+    <!-- SECTION 3 — AC/A RATIO -->
+    <section class="card" id="card-scheiman-aca">
       <div class="card-head">
-        <h2>Nearpoint Findings <span class="sub">(40&nbsp;cm)</span></h2>
-        <span class="sub">NPC &middot; Phoria &middot; Base-In &middot; Base-Out</span>
+        <div>
+          <h2><span class="card-step-num">3</span> AC/A Ratio</h2>
+          <span class="sub">Gradient Method (Pt. #13b+1.00 D) &middot; Accommodative Convergence / Accommodation</span>
+        </div>
+        <span class="sub formula-pill">AC/A = |Δ(+1.00) &minus; Δ| / 1.00</span>
       </div>
-      <table class="field-table">
-        <thead>
-          <tr>
-            <th style="width:105px;">Test No.</th>
-            <th>Finding</th>
-            <th>Encoded</th>
-            <th>Morgan's Expected</th>
-            <th style="width:90px;">Status</th>
-          </tr>
-        </thead>
-        <tbody id="tbl-scheiman-near"></tbody>
-      </table>
-    </section>
 
-    <!-- SECTION 4 — ACCOMMODATIVE BATTERY -->
-    <section class="card" id="card-scheiman-accomm">
-      <div class="card-head">
-        <h2>Accommodative Battery</h2>
-        <span class="sub">Amplitude &middot; Facility &middot; Relative Accomm.</span>
-      </div>
-      <table class="field-table">
-        <thead>
-          <tr>
-            <th style="width:105px;">Test No.</th>
-            <th>Finding</th>
-            <th>Encoded</th>
-            <th>Morgan's Expected</th>
-            <th style="width:90px;">Status</th>
-          </tr>
-        </thead>
-        <tbody id="tbl-scheiman-accomm"></tbody>
-      </table>
-    </section>
-
-    <!-- SECTION 5 — DIAGNOSTIC CALCULATIONS & PRESCRIBING SOLVERS -->
-    <section class="diag-grid">
-      <div class="card">
-        <div class="card-head"><h2>AC/A Ratio (Gradient)</h2><span class="sub">Point #13b+1.00 &minus; #13b</span></div>
-        <div class="gauge-wrap">
+      <div class="aca-flex-row">
+        <div class="gauge-wrap" style="flex:1;min-width:240px;">
           <svg id="scheimanAcaGauge" width="220" height="130" viewBox="0 0 220 130" aria-hidden="true"></svg>
           <div class="gauge-value" id="scheimanAcaValue">&mdash;</div>
           <div class="gauge-label" id="scheimanAcaLabel">Enter Near phorias to calculate</div>
         </div>
+        <div style="flex:2;min-width:280px;">
+          <table class="field-table" style="margin:0;">
+            <thead>
+              <tr>
+                <th style="width:105px;">Test No.</th>
+                <th>Finding</th>
+                <th>Encoded</th>
+                <th>Morgan's Expected</th>
+                <th style="width:90px;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-scheiman-aca"></tbody>
+          </table>
+        </div>
       </div>
+    </section>
+
+    <!-- SECTION 4 — VERGENCE AMPLITUDE -->
+    <section class="card" id="card-scheiman-vergence-amp">
+      <div class="card-head">
+        <div>
+          <h2><span class="card-step-num">4</span> Vergence Amplitude</h2>
+          <span class="sub">Smooth Fusional Vergence Reserves &middot; Distance (6 m) &amp; Near (40 cm)</span>
+        </div>
+        <span class="sub" style="font-family:var(--font-mono);font-size:11px;">NFV (BI) &middot; PFV (BO)</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th style="width:105px;">Test No.</th>
+            <th>Finding</th>
+            <th>Encoded</th>
+            <th>Morgan's Expected</th>
+            <th style="width:90px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-scheiman-vergence-amp"></tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 5 — VERGENCE FACILITY -->
+    <section class="card" id="card-scheiman-vergence-fac">
+      <div class="card-head">
+        <div>
+          <h2><span class="card-step-num">5</span> Vergence Facility</h2>
+          <span class="sub">12Δ BO / 3Δ BI Prism Flipper at 40 cm &middot; Dynamics of Fusional Vergence</span>
+        </div>
+        <span class="sub" style="font-family:var(--font-mono);font-size:11px;">Norm: 15 cpm (&plusmn;3 cpm)</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th style="width:105px;">Test No.</th>
+            <th>Finding</th>
+            <th>Encoded</th>
+            <th>Morgan's Expected</th>
+            <th style="width:90px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-scheiman-vergence-fac"></tbody>
+      </table>
+    </section>
+
+    <!-- SECTIONS 6 & 7 — ACCOMMODATIVE FACILITY (BAF & MAF) -->
+    <div class="grid-2col">
+      <!-- SECTION 6 — BINOCULAR ACCOMMODATIVE FACILITY -->
+      <section class="card" id="card-scheiman-baf">
+        <div class="card-head">
+          <div>
+            <h2><span class="card-step-num">6</span> Binocular Accommodative Facility (BAF)</h2>
+            <span class="sub">&plusmn;2.00 D Flipper at 40 cm (Binocular with Suppression Check)</span>
+          </div>
+          <span class="sub" style="font-family:var(--font-mono);font-size:11px;">Norm: 8 cpm (&plusmn;5 cpm)</span>
+        </div>
+        <table class="field-table">
+          <thead>
+            <tr>
+              <th style="width:105px;">Test No.</th>
+              <th>Finding</th>
+              <th>Encoded</th>
+              <th>Expected</th>
+              <th style="width:90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-scheiman-baf"></tbody>
+        </table>
+      </section>
+
+      <!-- SECTION 7 — MONOCULAR ACCOMMODATIVE FACILITY -->
+      <section class="card" id="card-scheiman-maf">
+        <div class="card-head">
+          <div>
+            <h2><span class="card-step-num">7</span> Monocular Accommodative Facility (MAF)</h2>
+            <span class="sub">&plusmn;2.00 D Flipper at 40 cm (Monocular OD/OS)</span>
+          </div>
+          <span class="sub" style="font-family:var(--font-mono);font-size:11px;">Norm: 11 cpm (&plusmn;5 cpm)</span>
+        </div>
+        <table class="field-table">
+          <thead>
+            <tr>
+              <th style="width:105px;">Test No.</th>
+              <th>Finding</th>
+              <th>Encoded</th>
+              <th>Expected</th>
+              <th style="width:90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-scheiman-maf"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- SECTIONS 8 & 9 — RELATIVE ACCOMMODATION (NRA & PRA) -->
+    <div class="grid-2col">
+      <!-- SECTION 8 — NRA -->
+      <section class="card" id="card-scheiman-nra">
+        <div class="card-head">
+          <div>
+            <h2><span class="card-step-num">8</span> Negative Relative Accommodation (NRA)</h2>
+            <span class="sub">Pt. #21 &middot; Plus to blur at 40 cm (Accommodative relaxation / PFV demand)</span>
+          </div>
+          <span class="sub" style="font-family:var(--font-mono);font-size:11px;">+2.00 D (&plusmn;0.50 D)</span>
+        </div>
+        <table class="field-table">
+          <thead>
+            <tr>
+              <th style="width:105px;">Test No.</th>
+              <th>Finding</th>
+              <th>Encoded</th>
+              <th>Expected</th>
+              <th style="width:90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-scheiman-nra"></tbody>
+        </table>
+      </section>
+
+      <!-- SECTION 9 — PRA -->
+      <section class="card" id="card-scheiman-pra">
+        <div class="card-head">
+          <div>
+            <h2><span class="card-step-num">9</span> Positive Relative Accommodation (PRA)</h2>
+            <span class="sub">Pt. #20 &middot; Minus to blur at 40 cm (Accommodative stimulation / NFV demand)</span>
+          </div>
+          <span class="sub" style="font-family:var(--font-mono);font-size:11px;">&minus;2.37 D (&plusmn;1.00 D)</span>
+        </div>
+        <table class="field-table">
+          <thead>
+            <tr>
+              <th style="width:105px;">Test No.</th>
+              <th>Finding</th>
+              <th>Encoded</th>
+              <th>Expected</th>
+              <th style="width:90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-scheiman-pra"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- SECTIONS 10 & 11 — DYNAMIC LAG & STEREOPSIS (MEM & STEREOPSIS) -->
+    <div class="grid-2col">
+      <!-- SECTION 10 — MEM -->
+      <section class="card" id="card-scheiman-mem">
+        <div class="card-head">
+          <div>
+            <h2><span class="card-step-num">10</span> Monocular Estimation Method (MEM)</h2>
+            <span class="sub">Pt. #6 &middot; Dynamic Retinoscopy at 40 cm &middot; Accommodative Response/Lag</span>
+          </div>
+          <span class="sub" style="font-family:var(--font-mono);font-size:11px;">+0.50 D (&plusmn;0.25 D)</span>
+        </div>
+        <table class="field-table">
+          <thead>
+            <tr>
+              <th style="width:105px;">Test No.</th>
+              <th>Finding</th>
+              <th>Encoded</th>
+              <th>Expected</th>
+              <th style="width:90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-scheiman-mem"></tbody>
+        </table>
+      </section>
+
+      <!-- SECTION 11 — STEREOPSIS -->
+      <section class="card" id="card-scheiman-stereo">
+        <div class="card-head">
+          <div>
+            <h2><span class="card-step-num">11</span> Stereopsis</h2>
+            <span class="sub">Sensory Fusion Acuity &middot; Local &amp; Global Depth Perception</span>
+          </div>
+          <span class="sub" style="font-family:var(--font-mono);font-size:11px;">&le; 20&ndash;40 arcsec</span>
+        </div>
+        <table class="field-table">
+          <thead>
+            <tr>
+              <th style="width:105px;">Test No.</th>
+              <th>Finding</th>
+              <th>Encoded</th>
+              <th>Expected</th>
+              <th style="width:90px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-scheiman-stereo"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- SECTION 12 — PRESCRIBING SOLVERS -->
+    <section class="diag-grid">
 
       <div class="card">
         <div class="card-head">

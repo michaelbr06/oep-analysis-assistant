@@ -294,9 +294,10 @@ const FIELDS = [
 /* ---------------------------------------------------------------------
    2. RENDER FORM
 ------------------------------------------------------------------- */
-function badgeHTML(status, note) {
+function badgeHTML(status, note, customLabel = null) {
   const labelMap = { wnl: 'WNL', high: 'HIGH (H)', low: 'LOW (L)', amber: 'BORDERLINE', idle: '—' };
-  return `<span class="badge ${status}" title="${note || ''}">${labelMap[status] || status}</span>`;
+  const text = customLabel || labelMap[status] || status;
+  return `<span class="badge ${status}" title="${note || ''}">${text}</span>`;
 }
 
 // Translate a signed phoria coordinate into the clinical-format preview
@@ -1284,7 +1285,83 @@ function formatSignedDiopter(val) {
 }
 
 const SCHEIMAN_FIELDS = [
-  // 1. Baseline Refraction (#4 & #7a only)
+  // 1. Cover Test (Distance 6 m & Near 40 cm — Direction & Speed of Recovery)
+  {
+    id: 's_ct_dist_dir', section: 'cover_test', oep: 'CT (6 m)', label: 'Distance Cover Test (6 m)', sub: 'Direction of recovery movement at distance',
+    kind: 'radio',
+    options: [
+      { value: 'exo', label: 'Exophoria' },
+      { value: 'eso', label: 'Esophoria' },
+      { value: 'ortho', label: 'Orthophoria' }
+    ],
+    evaluate: (v) => {
+      if (!v) return { status: 'idle', note: '—' };
+      if (v === 'ortho') return { status: 'wnl', note: 'Orthophoria at distance', label: 'ORTHO' };
+      if (v === 'exo') {
+        return SCHEIMAN_STATE.s_ct_dist_speed === 'slow'
+          ? { status: 'amber', note: 'Distance Exophoria with slow recovery', label: 'EXO' }
+          : { status: 'wnl', note: 'Distance Exophoria', label: 'EXO' };
+      }
+      if (v === 'eso') return { status: 'low', note: 'Distance Esophoria', label: 'ESO' };
+      return { status: 'idle', note: '—' };
+    },
+    normText: () => 'Orthophoria / Low Exo'
+  },
+  {
+    id: 's_ct_dist_speed', section: 'cover_test', oep: 'CT (6 m)', label: 'Distance Speed of Recovery', sub: 'Speed of binocular re-fusion at 6 m',
+    kind: 'radio',
+    options: [
+      { value: 'fast', label: 'Fast' },
+      { value: 'slow', label: 'Slow' }
+    ],
+    evaluate: (v) => {
+      if (SCHEIMAN_STATE.s_ct_dist_dir === 'ortho') return { status: 'idle', note: 'N/A — Orthophoria (no recovery movement)', label: 'N/A' };
+      if (!v) return { status: 'idle', note: '—' };
+      if (v === 'fast') return { status: 'wnl', note: 'Fast / compensated distance recovery', label: 'FAST' };
+      if (v === 'slow') return { status: 'amber', note: 'Slow / delayed distance recovery', label: 'SLOW' };
+      return { status: 'idle', note: '—' };
+    },
+    normText: () => 'Fast'
+  },
+  {
+    id: 's_ct_near_dir', section: 'cover_test', oep: 'CT (40 cm)', label: 'Near Cover Test (40 cm)', sub: 'Direction of recovery movement at near',
+    kind: 'radio',
+    options: [
+      { value: 'exo', label: 'Exophoria' },
+      { value: 'eso', label: 'Esophoria' },
+      { value: 'ortho', label: 'Orthophoria' }
+    ],
+    evaluate: (v) => {
+      if (!v) return { status: 'idle', note: '—' };
+      if (v === 'ortho') return { status: 'wnl', note: 'Orthophoria at near', label: 'ORTHO' };
+      if (v === 'exo') {
+        return SCHEIMAN_STATE.s_ct_near_speed === 'slow'
+          ? { status: 'amber', note: 'Near Exophoria with slow recovery', label: 'EXO' }
+          : { status: 'wnl', note: 'Near Exophoria', label: 'EXO' };
+      }
+      if (v === 'eso') return { status: 'low', note: 'Near Esophoria', label: 'ESO' };
+      return { status: 'idle', note: '—' };
+    },
+    normText: () => 'Orthophoria / Low Exo'
+  },
+  {
+    id: 's_ct_near_speed', section: 'cover_test', oep: 'CT (40 cm)', label: 'Near Speed of Recovery', sub: 'Speed of binocular re-fusion at 40 cm',
+    kind: 'radio',
+    options: [
+      { value: 'fast', label: 'Fast' },
+      { value: 'slow', label: 'Slow' }
+    ],
+    evaluate: (v) => {
+      if (SCHEIMAN_STATE.s_ct_near_dir === 'ortho') return { status: 'idle', note: 'N/A — Orthophoria (no recovery movement)', label: 'N/A' };
+      if (!v) return { status: 'idle', note: '—' };
+      if (v === 'fast') return { status: 'wnl', note: 'Fast / compensated near recovery', label: 'FAST' };
+      if (v === 'slow') return { status: 'amber', note: 'Slow / delayed near recovery', label: 'SLOW' };
+      return { status: 'idle', note: '—' };
+    },
+    normText: () => 'Fast'
+  },
+
+  // 2. Baseline Refraction (#4 & #7a only)
   {
     id: 's_ret4', section: 'baseline', oep: 'Pt. #4', label: 'Static Retinoscopy', sub: 'Objective distance spherical equivalent baseline',
     kind: 'num', signedDiopter: true, unit: 'D', step: '0.25', placeholder: '-1.00',
@@ -1576,8 +1653,106 @@ function updateScheimanPhoriaPreview(id, val) {
   }
 }
 
+function analyzeCoverTest() {
+  const distDir = SCHEIMAN_STATE.s_ct_dist_dir ?? null;
+  const distSpeed = SCHEIMAN_STATE.s_ct_dist_speed ?? null;
+  const nearDir = SCHEIMAN_STATE.s_ct_near_dir ?? null;
+  const nearSpeed = SCHEIMAN_STATE.s_ct_near_speed ?? null;
+
+  const hasAny = Boolean(distDir || distSpeed || nearDir || nearSpeed);
+
+  const dirLabels = { exo: 'Exophoria', eso: 'Esophoria', ortho: 'Orthophoria' };
+  const speedLabels = { fast: 'Fast', slow: 'Slow' };
+
+  let pattern = null;
+  let patternLabel = null;
+
+  if (distDir && nearDir) {
+    if (nearDir === 'exo' && (distDir === 'ortho' || distDir === 'eso' || (distDir === 'exo' && distSpeed === 'fast' && nearSpeed === 'slow'))) {
+      pattern = 'exo_n';
+      patternLabel = 'Exo > N';
+    } else if (nearDir === 'eso' && (distDir === 'ortho' || distDir === 'exo' || (distDir === 'eso' && distSpeed === 'fast' && nearSpeed === 'slow'))) {
+      pattern = 'eso_n';
+      patternLabel = 'Eso > N';
+    } else if (distDir === 'eso' && (nearDir === 'ortho' || nearDir === 'exo' || (nearDir === 'eso' && distSpeed === 'slow' && nearSpeed === 'fast'))) {
+      pattern = 'eso_d';
+      patternLabel = 'Eso > D';
+    } else if (distDir === 'exo' && (nearDir === 'ortho' || nearDir === 'eso' || (nearDir === 'exo' && distSpeed === 'slow' && nearSpeed === 'fast'))) {
+      pattern = 'exo_d';
+      patternLabel = 'Exo > D';
+    } else if (distDir === 'exo' && nearDir === 'exo') {
+      pattern = 'basic_exo';
+      patternLabel = 'Exo (D & N)';
+    } else if (distDir === 'eso' && nearDir === 'eso') {
+      pattern = 'basic_eso';
+      patternLabel = 'Eso (D & N)';
+    } else if (distDir === 'ortho' && nearDir === 'ortho') {
+      pattern = 'ortho';
+      patternLabel = 'Ortho (D & N)';
+    }
+  } else if (nearDir) {
+    pattern = nearDir === 'exo' ? 'exo_n' : (nearDir === 'eso' ? 'eso_n' : 'ortho');
+    patternLabel = nearDir === 'exo' ? 'Near Exo' : (nearDir === 'eso' ? 'Near Eso' : 'Near Ortho');
+  } else if (distDir) {
+    pattern = distDir === 'exo' ? 'exo_d' : (distDir === 'eso' ? 'eso_d' : 'ortho');
+    patternLabel = distDir === 'exo' ? 'Distance Exo' : (distDir === 'eso' ? 'Distance Eso' : 'Distance Ortho');
+  }
+
+  const distSlow = distSpeed === 'slow';
+  const nearSlow = nearSpeed === 'slow';
+  const hasSlowRecovery = distSlow || nearSlow;
+
+  return {
+    distDir, distSpeed, nearDir, nearSpeed,
+    distDirLabel: distDir ? dirLabels[distDir] : null,
+    nearDirLabel: nearDir ? dirLabels[nearDir] : null,
+    distSpeedLabel: distSpeed ? speedLabels[distSpeed] : null,
+    nearSpeedLabel: nearSpeed ? speedLabels[nearSpeed] : null,
+    hasAny, pattern, patternLabel,
+    distSlow, nearSlow, hasSlowRecovery
+  };
+}
+
+function updateCtRecoveryHint() {
+  const ctHint = document.getElementById('ctRecoveryHint');
+  if (!ctHint) return;
+  const ct = analyzeCoverTest();
+
+  if (!ct.hasAny) {
+    ctHint.innerHTML = '<em>Optional: Select Distance (6 m) and Near (40 cm) cover test direction and speed of recovery to evaluate binocular motor fusion dynamics.</em>';
+    return;
+  }
+
+  const parts = [];
+  if (ct.patternLabel) {
+    parts.push(`<span class="ct-pattern-pill">${ct.patternLabel}</span>`);
+  }
+
+  const summaryBits = [];
+  if (ct.distDirLabel || ct.distSpeedLabel) {
+    summaryBits.push(`Distance (6 m): <strong>${[ct.distDirLabel, ct.distSpeedLabel ? ct.distSpeedLabel + ' recovery' : null].filter(Boolean).join(' · ')}</strong>`);
+  }
+  if (ct.nearDirLabel || ct.nearSpeedLabel) {
+    summaryBits.push(`Near (40 cm): <strong>${[ct.nearDirLabel, ct.nearSpeedLabel ? ct.nearSpeedLabel + ' recovery' : null].filter(Boolean).join(' · ')}</strong>`);
+  }
+  if (summaryBits.length) parts.push(`<span>${summaryBits.join(' &nbsp;|&nbsp; ')}.</span>`);
+
+  if (ct.distSpeed === 'fast' && ct.nearSpeed === 'slow') {
+    parts.push('<strong style="color:var(--high);">Sluggish near recovery:</strong> Fragile near motor fusion (supports near-predominant anomalies such as <em>CI</em> or <em>CE</em>).');
+  } else if (ct.distSpeed === 'slow' && ct.nearSpeed === 'fast') {
+    parts.push('<strong style="color:var(--low);">Sluggish distance recovery:</strong> Fragile distance motor fusion (supports distance-predominant anomalies such as <em>DI</em> or <em>DE</em>).');
+  } else if (ct.distSlow && ct.nearSlow) {
+    parts.push('<strong style="color:var(--amber);">Slow recovery at both distances:</strong> Reduced binocular recovery resilience across distance and near.');
+  } else if (ct.distSpeed === 'fast' && ct.nearSpeed === 'fast') {
+    parts.push('<strong style="color:var(--wnl);">Fast recovery at both distances:</strong> Well-compensated motor fusion.');
+  }
+
+  ctHint.innerHTML = parts.join(' ');
+}
+
 function renderScheimanTables() {
   const targets = {
+    cover_test: document.getElementById('tbl-scheiman-cover-test'),
     baseline: document.getElementById('tbl-scheiman-baseline'),
     age_accomm: document.getElementById('tbl-scheiman-age-accomm'),
     distance: document.getElementById('tbl-scheiman-distance'),
@@ -1603,6 +1778,18 @@ function renderScheimanTables() {
                  aria-label="${f.label}">
           <span class="unit">${f.unit}</span>
           <span class="phoria-preview" id="scheiman-prev-${f.id}"></span>
+        </div>`;
+    } else if (f.kind === 'radio') {
+      inputHTML = `
+        <div class="ct-radio-group" role="radiogroup" aria-label="${f.label}">
+          ${(f.options || []).map(opt => `
+            <label class="ct-radio-label">
+              <input type="radio" name="scheiman_${f.id}" value="${opt.value}" data-scheiman-radio="${f.id}">
+              <span class="ct-radio-tile">
+                <span class="ct-radio-dot"></span>
+                <span class="ct-radio-text">${opt.label}</span>
+              </span>
+            </label>`).join('')}
         </div>`;
     } else if (f.kind === 'select') {
       inputHTML = `
@@ -1713,6 +1900,28 @@ function renderScheimanTables() {
       evaluateScheiman();
     });
   });
+
+  // Attach live listeners for radio button groups (Cover Test)
+  document.querySelectorAll('[data-scheiman-radio]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (radio.checked) {
+        const id = radio.getAttribute('data-scheiman-radio');
+        SCHEIMAN_STATE[id] = radio.value || null;
+        evaluateScheiman();
+      }
+    });
+  });
+
+  const ctClearBtn = document.getElementById('ctClearBtn');
+  if (ctClearBtn) {
+    ctClearBtn.addEventListener('click', () => {
+      SCHEIMAN_FIELDS.filter(f => f.section === 'cover_test').forEach(f => {
+        SCHEIMAN_STATE[f.id] = null;
+        document.querySelectorAll(`[data-scheiman-radio="${f.id}"]`).forEach(r => { r.checked = false; });
+      });
+      evaluateScheiman();
+    });
+  }
 }
 
 // Scheiman AC/A SVG dial — Morgan's expected 4:1 ± 2 (2:1–6:1 green zone)
@@ -1749,7 +1958,37 @@ function drawScheimanAcaGauge(value) {
   `;
 }
 
+function syncCoverTestSpeedAvailability() {
+  const pairs = [
+    { dirId: 's_ct_dist_dir', speedId: 's_ct_dist_speed' },
+    { dirId: 's_ct_near_dir', speedId: 's_ct_near_speed' }
+  ];
+
+  pairs.forEach(({ dirId, speedId }) => {
+    const isOrtho = SCHEIMAN_STATE[dirId] === 'ortho';
+    const radios = document.querySelectorAll(`[data-scheiman-radio="${speedId}"]`);
+    const row = document.getElementById(`scheiman-row-${speedId}`);
+
+    if (isOrtho) {
+      SCHEIMAN_STATE[speedId] = null;
+      radios.forEach(r => {
+        r.checked = false;
+        r.disabled = true;
+      });
+    } else {
+      radios.forEach(r => {
+        r.disabled = false;
+      });
+    }
+
+    if (row) row.classList.toggle('ct-row-disabled', isOrtho);
+  });
+}
+
 function evaluateScheiman() {
+  // 0. Enforce Cover Test speed availability (disabled & cleared when Orthophoria)
+  syncCoverTestSpeedAvailability();
+
   // 1. Hofstetter Normal Ranges Box update (AOA in D & NPA in cm)
   const norms = computeHofstetterNorms(SCHEIMAN_STATE.s_age);
   const avgEl = document.getElementById('hofCalcAvgVal');
@@ -1777,8 +2016,11 @@ function evaluateScheiman() {
     const normEl = document.getElementById(`scheiman-norm-${f.id}`);
     if (normEl) normEl.textContent = f.normText();
     const badgeEl = document.getElementById(`scheiman-badge-${f.id}`);
-    if (badgeEl) badgeEl.innerHTML = badgeHTML(res.status, res.note);
+    if (badgeEl) badgeEl.innerHTML = badgeHTML(res.status, res.note, res.label);
   });
+
+  // 2b. Update live Cover Test recovery dynamics & deviation pattern hint
+  updateCtRecoveryHint();
 
   // 3. Auto-calculated Gradient AC/A (#13b+1.00 − #13b) vs Morgan's 4:1 ± 2
   const np = SCHEIMAN_STATE.s_n_phoria;
@@ -1883,6 +2125,7 @@ function evaluateScheimanClassification(acaRatio = null) {
   const mgmt = document.getElementById('scheimanMgmtList');
   if (!box || !tag || !title || !desc || !mgmt) return;
 
+  const ct = analyzeCoverTest();
   const dPhoria = SCHEIMAN_STATE.s_d_phoria ?? null;
   const nPhoria = SCHEIMAN_STATE.s_n_phoria ?? null;
   const npcBreak = SCHEIMAN_STATE.s_npc_break ?? null;
@@ -1898,15 +2141,15 @@ function evaluateScheimanClassification(acaRatio = null) {
   const nra = SCHEIMAN_STATE.s_nra ?? null;
   const pra = SCHEIMAN_STATE.s_pra ?? null;
 
-  const hasAnyClinicalData = [
+  const hasNonCtData = [
     dPhoria, nPhoria, npcBreak, nBoBreak, nBoBlur, nBiBreak,
     amp, npa, bafFail, mafFail, mem, nra, pra
   ].some(v => v !== null && v !== undefined && v !== '');
 
-  if (!hasAnyClinicalData) {
+  if (!ct.hasAny && !hasNonCtData) {
     tag.textContent = 'AWAITING CLINICAL DATA';
     title.textContent = 'Enter findings above to classify binocular and accommodative status';
-    desc.textContent = 'Encode distance and near lateral phorias, NPC, fusional vergence reserves, OU AOA/NPA, and accommodative battery findings to activate the differential diagnosis engine matching Scheiman\'s Diagnostic Summary Reference.';
+    desc.textContent = 'Encode cover test findings, distance and near lateral phorias, NPC, fusional vergence reserves, OU AOA/NPA, and accommodative battery findings to activate the differential diagnosis engine matching Scheiman\'s Diagnostic Summary Reference.';
     mgmt.innerHTML = '';
     return;
   }
@@ -1921,42 +2164,78 @@ function evaluateScheimanClassification(acaRatio = null) {
   const phoriaDiff = nExo - dExo; // Positive = more Exo at near; Negative = more Eso at near
   const acaNote = (acaRatio !== null && !isNaN(acaRatio)) ? ` Gradient AC/A is ${fmt(acaRatio, 1)}:1.` : '';
 
+  const buildCtSupportNote = (expectedPatterns = []) => {
+    if (!ct.hasAny) return '';
+    const detailBits = [];
+    if (ct.distDirLabel || ct.distSpeedLabel) {
+      detailBits.push(`Distance: ${[ct.distDirLabel, ct.distSpeedLabel ? ct.distSpeedLabel + ' recovery' : null].filter(Boolean).join(', ')}`);
+    }
+    if (ct.nearDirLabel || ct.nearSpeedLabel) {
+      detailBits.push(`Near: ${[ct.nearDirLabel, ct.nearSpeedLabel ? ct.nearSpeedLabel + ' recovery' : null].filter(Boolean).join(', ')}`);
+    }
+    const detailStr = detailBits.length ? ` (${detailBits.join('; ')})` : '';
+    if (ct.patternLabel) {
+      const agrees = expectedPatterns.length > 0 && expectedPatterns.includes(ct.pattern);
+      return agrees
+        ? ` Cover test corroborates ${ct.patternLabel}${detailStr}.`
+        : ` Cover test shows ${ct.patternLabel}${detailStr}.`;
+    }
+    return detailStr ? ` Cover test findings${detailStr}.` : '';
+  };
+
   let matched = null;
 
   // 1. Convergence Insufficiency (CI)
-  if (phoriaDiff >= 4.0 && ((npcBreak !== null && npcBreak > 5.0) || (nBoBreak !== null && nBoBreak < 15) || (nBoBlur !== null && nBoBlur < 12) || bafFail === 'plus')) {
+  if (phoriaDiff >= 4.0 && nExo >= 4.0 && (
+    (npcBreak !== null && npcBreak > 5.0) ||
+    (nBoBreak !== null && nBoBreak < 15) ||
+    (nBoBlur !== null && nBoBlur < 12) ||
+    bafFail === 'plus' ||
+    (ct.nearDir === 'exo' && ct.nearSlow)
+  )) {
     const bafNote = bafFail === 'plus' && mafFail === 'pass' ? ' BAF fails plus (+) while MAF is normal, isolating a positive fusional vergence (PFV) defect.' : '';
+    const ctNote = buildCtSupportNote(['exo_n', 'basic_exo']);
+    const mgmtList = [
+      'Office-Based Vergence / Accommodative Therapy with home reinforcement is the primary treatment of choice (proven by the multi-center Convergence Insufficiency Treatment Trial [CITT], highest Level-1 evidence).',
+      'Base-In relieving prism calculated via Sheard\'s criterion (or reading glasses with BI prism) if vision therapy is delayed or not feasible.',
+      'Home-based computer vergence therapy as a secondary alternative if in-office therapy is unavailable.'
+    ];
+    if (ct.nearSlow) {
+      mgmtList.unshift('Slow near cover test recovery confirms fragile near motor fusion — prioritize positive fusional vergence stabilization and jump vergence stamina.');
+    }
     matched = {
       tag: 'CONVERGENCE INSUFFICIENCY (CI)',
       title: 'Convergence Insufficiency (High Evidence / CITT Protocol)',
-      desc: `Patient exhibits significantly greater exophoria at near (${fmt(nExo, 1)}Δ) compared to distance (${fmt(dExo, 1)}Δ), receded NPC (${npcBreak !== null ? fmt(npcBreak, 1) + ' cm' : 'not entered'}), and deficient positive fusional vergence reserves (low BO).${acaNote}${bafNote}`,
-      mgmt: [
-        'Office-Based Vergence / Accommodative Therapy with home reinforcement is the primary treatment of choice (proven by the multi-center Convergence Insufficiency Treatment Trial [CITT], highest Level-1 evidence).',
-        'Base-In relieving prism calculated via Sheard\'s criterion (or reading glasses with BI prism) if vision therapy is delayed or not feasible.',
-        'Home-based computer vergence therapy as a secondary alternative if in-office therapy is unavailable.'
-      ]
+      desc: `Patient exhibits significantly greater exophoria at near (${fmt(nExo, 1)}Δ) compared to distance (${fmt(dExo, 1)}Δ), receded NPC (${npcBreak !== null ? fmt(npcBreak, 1) + ' cm' : 'not entered'}), and deficient positive fusional vergence reserves (low BO).${acaNote}${bafNote}${ctNote}`,
+      mgmt: mgmtList
     };
   }
   // 2. Convergence Excess (CE)
   else if (phoriaDiff <= -3.0 && nExo < 0) {
     const bafNote = bafFail === 'minus' && mafFail === 'pass' ? ' BAF fails minus (-) while MAF is normal, isolating a negative fusional vergence (NFV) defect.' : '';
+    const ctNote = buildCtSupportNote(['eso_n', 'basic_eso']);
+    const mgmtList = [
+      'Added plus lenses (+1.00 D to +2.00 D reading add or PAL/bifocal) at near to relieve accommodative demand and decrease the near esophoric angle.',
+      'Vergence therapy to expand Negative Fusional Vergence (Base-In reserves) at near and improve binocular accommodative facility.',
+      'Base-Out prism if symptomatic at near and plus acceptance is limited.'
+    ];
+    if (ct.nearSlow) {
+      mgmtList.unshift('Slow near cover test recovery indicates fragile near divergence control — expedite near plus relief and monitor for intermittent near diplopia.');
+    }
     matched = {
       tag: 'CONVERGENCE EXCESS (CE)',
       title: 'Convergence Excess (Near Esophoria / High AC/A Trend)',
-      desc: `Patient shows clinically significant esophoria at near (${fmt(Math.abs(nExo), 1)}Δ Eso) with reduced near negative fusional vergence (BI) and elevated accommodative lag.${acaNote}${bafNote}`,
-      mgmt: [
-        'Added plus lenses (+1.00 D to +2.00 D reading add or PAL/bifocal) at near to relieve accommodative demand and decrease the near esophoric angle.',
-        'Vergence therapy to expand Negative Fusional Vergence (Base-In reserves) at near and improve binocular accommodative facility.',
-        'Base-Out prism if symptomatic at near and plus acceptance is limited.'
-      ]
+      desc: `Patient shows clinically significant esophoria at near (${fmt(Math.abs(nExo), 1)}Δ Eso) with reduced near negative fusional vergence (BI) and elevated accommodative lag.${acaNote}${bafNote}${ctNote}`,
+      mgmt: mgmtList
     };
   }
   // 3. Divergence Insufficiency (DI)
   else if (dExo <= -3.0 && phoriaDiff >= 3.0 && dExo < nExo) {
+    const ctNote = buildCtSupportNote(['eso_d', 'basic_eso']);
     matched = {
       tag: 'DIVERGENCE INSUFFICIENCY (DI)',
       title: 'Divergence Insufficiency (Distance Esophoria Predominance)',
-      desc: `Marked esophoria at distance (${fmt(Math.abs(dExo), 1)}Δ Eso) compared to near, with deficient distance base-in (NFV) reserves. Comitant deviation.${acaNote}`,
+      desc: `Marked esophoria at distance (${fmt(Math.abs(dExo), 1)}Δ Eso) compared to near, with deficient distance base-in (NFV) reserves. Comitant deviation.${acaNote}${ctNote}`,
       mgmt: [
         'Carefully verify comitance in 9 gazes and rule out cranial nerve VI paresis or systemic/neurological etiologies if recent or sudden onset.',
         'Base-Out relieving prism prescribed primarily for full-time distance wear.',
@@ -1966,23 +2245,29 @@ function evaluateScheimanClassification(acaRatio = null) {
   }
   // 4. Divergence Excess (DE)
   else if (dExo >= 6.0 && phoriaDiff <= -4.0) {
+    const ctNote = buildCtSupportNote(['exo_d', 'basic_exo']);
+    const mgmtList = [
+      'Office-based vision therapy to establish diplopia awareness and strong voluntary convergence.',
+      'Over-minus lenses to stimulate accommodative convergence if patient is young and accommodation is robust.',
+      'Relieving Base-In prism if conservative therapy is insufficient.'
+    ];
+    if (ct.distSlow) {
+      mgmtList.unshift('Slow distance cover test recovery indicates fragile distance fusion control — consider a 30–60 minute patch test to differentiate true vs. simulated divergence excess.');
+    }
     matched = {
       tag: 'DIVERGENCE EXCESS (DE)',
       title: 'Divergence Excess (High Distance Exophoria)',
-      desc: `Distance exophoria (${fmt(dExo, 1)}Δ) is significantly greater than near phoria, with normal near point of convergence and high AC/A characteristics.${acaNote}`,
-      mgmt: [
-        'Office-based vision therapy to establish diplopia awareness and strong voluntary convergence.',
-        'Over-minus lenses to stimulate accommodative convergence if patient is young and accommodation is robust.',
-        'Relieving Base-In prism if conservative therapy is insufficient.'
-      ]
+      desc: `Distance exophoria (${fmt(dExo, 1)}Δ) is significantly greater than near phoria, with normal near point of convergence and high AC/A characteristics.${acaNote}${ctNote}`,
+      mgmt: mgmtList
     };
   }
   // 5. Basic Exophoria
   else if (dExo >= 4.0 && nExo >= 4.0 && Math.abs(phoriaDiff) < 4.0) {
+    const ctNote = buildCtSupportNote(['basic_exo']);
     matched = {
       tag: 'BASIC EXOPHORIA',
       title: 'Basic Exophoria (Equal Distance & Near Exophoria)',
-      desc: `Exophoria of similar magnitude at distance (${fmt(dExo, 1)}Δ) and near (${fmt(nExo, 1)}Δ) with normal AC/A ratio and reduced positive fusional reserves across both distances.${acaNote}`,
+      desc: `Exophoria of similar magnitude at distance (${fmt(dExo, 1)}Δ) and near (${fmt(nExo, 1)}Δ) with normal AC/A ratio and reduced positive fusional reserves across both distances.${acaNote}${ctNote}`,
       mgmt: [
         'Vision therapy designed to build positive fusional vergence (BO) at both distance and near.',
         'Relieving Base-In prism (Sheard\'s demand) for full-time refractive correction if therapy is not elected.'
@@ -1991,10 +2276,11 @@ function evaluateScheimanClassification(acaRatio = null) {
   }
   // 6. Basic Esophoria
   else if (dExo <= -2.0 && nExo <= -2.0 && Math.abs(phoriaDiff) < 3.0) {
+    const ctNote = buildCtSupportNote(['basic_eso']);
     matched = {
       tag: 'BASIC ESOPHORIA',
       title: 'Basic Esophoria (Equal Distance & Near Esophoria)',
-      desc: `Esophoria of similar magnitude at distance and near with reduced negative fusional vergence (BI) reserves.${acaNote}`,
+      desc: `Esophoria of similar magnitude at distance (${fmt(Math.abs(dExo), 1)}Δ Eso) and near (${fmt(Math.abs(nExo), 1)}Δ Eso) with reduced negative fusional vergence (BI) reserves.${acaNote}${ctNote}`,
       mgmt: [
         'Full distance hyperopic correction determined via cycloplegic or static retinoscopy.',
         'Base-Out prism prescription for relieving prism demand.',
@@ -2005,10 +2291,11 @@ function evaluateScheimanClassification(acaRatio = null) {
   // 7. Fusional Vergence Dysfunction (FVD)
   else if (Math.abs(dExo) <= 2.0 && Math.abs(nExo) <= 3.0 &&
            (((nBoBreak !== null && nBoBreak < 15) && (nBiBreak !== null && nBiBreak < 15)) || (bafFail === 'both' && mafFail === 'pass'))) {
+    const ctNote = buildCtSupportNote(['ortho']);
     matched = {
       tag: 'FUSIONAL VERGENCE DYSFUNCTION (FVD)',
       title: 'Fusional Vergence Dysfunction (Normal Alignment, Deficient Reserves & Facility)',
-      desc: 'Normal distance and near phorias (orthophoria or near ortho), but reduced fusional reserves in both directions (low BO and BI), and poor binocular accommodative facility despite normal monocular facility.',
+      desc: `Normal distance and near phorias (orthophoria or near ortho), but reduced fusional reserves in both directions (low BO and BI), and poor binocular accommodative facility despite normal monocular facility.${ctNote}`,
       mgmt: [
         'Office-based vision therapy is the primary definitive treatment (high success rate).',
         'Prisms and plus lenses are not indicated because phorias are ortho/normal.'
@@ -2016,7 +2303,6 @@ function evaluateScheimanClassification(acaRatio = null) {
     };
   }
   // 8. Accommodative Insufficiency (AI) & Ill-Sustained Accommodation
-  //    Evaluates Measured AOA (OU) [s_amp] and Measured NPA (OU) [s_npa] against Hofstetter's minimum norm
   else if (isLowAccommAmp) {
     const ampParts = [];
     if (amp !== null) ampParts.push(`OU AOA ${fmt(amp, 1)} D (min ${fmt(hofNorms.aoaMin, 1)} D)`);
@@ -2030,7 +2316,7 @@ function evaluateScheimanClassification(acaRatio = null) {
     matched = {
       tag: 'ACCOMMODATIVE INSUFFICIENCY (AI)',
       title: 'Accommodative Insufficiency (OU Amplitude Below Hofstetter Minimum)',
-      desc: `Binocular (OU) accommodative amplitude falls below Hofstetter's minimum norm.${ampSummary}${extraNote}`,
+      desc: `Binocular (OU) accommodative amplitude falls below Hofstetter's minimum norm.${ampSummary}${extraNote}${buildCtSupportNote([])}`,
       mgmt: [
         'Near reading add (bifocal / progressive or reading glasses) to eliminate near visual strain.',
         'Accommodative vision therapy (monocular and binocular flipper techniques) to restore accommodative amplitude and facility.'
@@ -2047,9 +2333,9 @@ function evaluateScheimanClassification(acaRatio = null) {
       title: hasNormalOu
         ? 'Ill-Sustained Accommodation (Normal OU Amplitude, Fails Minus MAF & BAF)'
         : 'Suspected Accommodative Insufficiency / Ill-Sustained Accommodation',
-      desc: hasNormalOu
+      desc: (hasNormalOu
         ? `OU accommodative amplitude meets Hofstetter's minimum norm (${ampParts.join(', ')} for age ${age}), but failure on minus lenses during both MAF and BAF indicates accommodative fatigue / ill-sustained accommodation.`
-        : 'Failure on minus lenses during both MAF and BAF suggests reduced accommodative stamina. Enter Patient Age and Measured AOA (OU) / NPA (OU) to differentiate Accommodative Insufficiency from Ill-Sustained Accommodation.',
+        : 'Failure on minus lenses during both MAF and BAF suggests reduced accommodative stamina. Enter Patient Age and Measured AOA (OU) / NPA (OU) to differentiate Accommodative Insufficiency from Ill-Sustained Accommodation.') + buildCtSupportNote([]),
       mgmt: [
         'Accommodative vision therapy (monocular and binocular minus-lens flipper stamina protocols).',
         'Consider low near plus reading add if symptoms persist under sustained near visual demand.'
@@ -2064,7 +2350,7 @@ function evaluateScheimanClassification(acaRatio = null) {
     matched = {
       tag: 'ACCOMMODATIVE EXCESS (AE)',
       title: 'Accommodative Excess (Accommodative Spasm / Lead)',
-      desc: `Patient demonstrates difficulty relaxing accommodation, failing plus lenses on both binocular and monocular accommodative facility, with low NRA and/or lead of accommodation on MEM retinoscopy.${ouNote}`,
+      desc: `Patient demonstrates difficulty relaxing accommodation, failing plus lenses on both binocular and monocular accommodative facility, with low NRA and/or lead of accommodation on MEM retinoscopy.${ouNote}${buildCtSupportNote([])}`,
       mgmt: [
         'Vision therapy focused on accommodative relaxation techniques.',
         'Short-term low plus reading lens or therapeutic visual hygiene.',
@@ -2080,19 +2366,55 @@ function evaluateScheimanClassification(acaRatio = null) {
     matched = {
       tag: 'ACCOMMODATIVE INFACILITY',
       title: 'Accommodative Infacility (Difficulty Clearing Both Plus & Minus)',
-      desc: `Markedly reduced facility clearing both plus and minus lenses monocularly and binocularly, with reduced NRA and PRA.${ouNote}`,
+      desc: `Markedly reduced facility clearing both plus and minus lenses monocularly and binocularly, with reduced NRA and PRA.${ouNote}${buildCtSupportNote([])}`,
       mgmt: [
         'Accommodative vision therapy progressing from monocular to binocular flipper techniques.',
         'Ergonomic counsel regarding frequent visual breaks (20-20-20 rule).'
       ]
     };
   }
+  // 10b. Cover Test Preliminary Differential (when slow recovery or Cover Test-only pattern is present before phorias/reserves)
+  else if (ct.hasSlowRecovery) {
+    let suspectTag = 'SLOW / FRAGILE BINOCULAR RECOVERY (COVER TEST)';
+    let suspectTitle = 'Cover Test Indicates Slow Binocular Recovery — Complete Vergence Battery';
+    if (ct.pattern === 'exo_n') {
+      suspectTag = 'SUSPECTED CONVERGENCE INSUFFICIENCY (COVER TEST)';
+      suspectTitle = 'Near Exophoria with Slow Recovery — Evaluate for Convergence Insufficiency';
+    } else if (ct.pattern === 'eso_n') {
+      suspectTag = 'SUSPECTED CONVERGENCE EXCESS (COVER TEST)';
+      suspectTitle = 'Near Esophoria with Slow Recovery — Evaluate for Convergence Excess';
+    } else if (ct.pattern === 'eso_d') {
+      suspectTag = 'SUSPECTED DIVERGENCE INSUFFICIENCY (COVER TEST)';
+      suspectTitle = 'Distance Esophoria with Slow Recovery — Evaluate for Divergence Insufficiency';
+    } else if (ct.pattern === 'exo_d') {
+      suspectTag = 'SUSPECTED DIVERGENCE EXCESS (COVER TEST)';
+      suspectTitle = 'Distance Exophoria with Slow Recovery — Evaluate for Divergence Excess';
+    } else if (ct.pattern === 'basic_exo') {
+      suspectTag = 'SUSPECTED BASIC EXOPHORIA (COVER TEST)';
+      suspectTitle = 'Distance & Near Exophoria with Slow Recovery — Evaluate for Basic Exophoria';
+    } else if (ct.pattern === 'basic_eso') {
+      suspectTag = 'SUSPECTED BASIC ESOPHORIA (COVER TEST)';
+      suspectTitle = 'Distance & Near Esophoria with Slow Recovery — Evaluate for Basic Esophoria';
+    }
+    matched = {
+      tag: suspectTag,
+      title: suspectTitle,
+      desc: `${buildCtSupportNote([ct.pattern]).trim()}${acaNote} Encode distance and near lateral phorias (#8, #13b), NPC, and smooth fusional vergences (BI & BO) to confirm the definitive Scheiman & Wick diagnosis.`,
+      mgmt: [
+        'Quantify distance (#8) and near (#13b) lateral phorias plus Gradient AC/A to confirm distance-vs-near alignment relationship.',
+        'Measure NPC and smooth fusional vergence reserves (BI / NFV and BO / PFV) to evaluate compensating reserve adequacy.'
+      ]
+    };
+  }
   // 11. Normal / Balanced
   else {
+    const alignmentSummary = hasNonCtData
+      ? `Distance phoria (${fmt(dExo, 1)}Δ) and near phoria (${fmt(nExo, 1)}Δ) are within expected Morgan normative ranges, with adequate compensating reserves.`
+      : 'Cover test shows compensated alignment without slow recovery.';
     matched = {
       tag: 'BALANCED BINOCULAR FUNCTION',
       title: 'Findings Within Normal Limits / Borderline Tolerance',
-      desc: `Distance phoria (${fmt(dExo, 1)}Δ) and near phoria (${fmt(nExo, 1)}Δ) are within expected Morgan normative ranges, with adequate compensating reserves.${acaNote}`,
+      desc: `${alignmentSummary}${acaNote}${buildCtSupportNote(['ortho'])}`,
       mgmt: [
         'Routine visual hygiene and ergonomic counsel for near computer tasks.',
         'Re-evaluate if patient reports intermittent asthenopia, diplopia, or visual fatigue.'
@@ -2108,6 +2430,8 @@ function evaluateScheimanClassification(acaRatio = null) {
 
 // Scheiman Patient Presets
 const PRESET_SCHEIMAN_CI = {
+  s_ct_dist_dir: 'exo', s_ct_dist_speed: 'fast',
+  s_ct_near_dir: 'exo', s_ct_near_speed: 'slow',
   s_ret4: -0.50, s_sub7a: -0.75,
   s_age: 22, s_amp: 12.0, s_npa: 8.3,
   s_d_phoria: 1.0,
@@ -2124,6 +2448,8 @@ const PRESET_SCHEIMAN_CI = {
 };
 
 const PRESET_SCHEIMAN_CE = {
+  s_ct_dist_dir: 'eso', s_ct_dist_speed: 'fast',
+  s_ct_near_dir: 'eso', s_ct_near_speed: 'slow',
   s_ret4: 0.25, s_sub7a: 0.00,
   s_age: 18, s_amp: 13.5, s_npa: 7.4,
   s_d_phoria: -1.0,
@@ -2140,6 +2466,8 @@ const PRESET_SCHEIMAN_CE = {
 };
 
 const PRESET_SCHEIMAN_BASIC_EXO = {
+  s_ct_dist_dir: 'exo', s_ct_dist_speed: 'slow',
+  s_ct_near_dir: 'exo', s_ct_near_speed: 'slow',
   s_ret4: -1.25, s_sub7a: -1.50,
   s_age: 26, s_amp: 11.0, s_npa: 9.1,
   s_d_phoria: 8.0,
@@ -2169,6 +2497,10 @@ function applyScheimanPatient(preset) {
       const el = document.querySelector(`[data-scheiman-signed="${f.id}"]`);
       if (el) el.value = val === null ? '' : val;
       updateScheimanPhoriaPreview(f.id, val);
+    } else if (f.kind === 'radio') {
+      document.querySelectorAll(`[data-scheiman-radio="${f.id}"]`).forEach(r => {
+        r.checked = (val !== null && r.value === val);
+      });
     } else if (f.kind === 'select') {
       const el = document.querySelector(`[data-scheiman-select="${f.id}"]`);
       if (el) el.value = val === null ? '' : val;
@@ -2193,6 +2525,10 @@ function clearScheimanPatient() {
       const el = document.querySelector(`[data-scheiman-signed="${f.id}"]`);
       if (el) el.value = '';
       updateScheimanPhoriaPreview(f.id, null);
+    } else if (f.kind === 'radio') {
+      document.querySelectorAll(`[data-scheiman-radio="${f.id}"]`).forEach(r => {
+        r.checked = false;
+      });
     } else if (f.kind === 'select') {
       const el = document.querySelector(`[data-scheiman-select="${f.id}"]`);
       if (el) el.value = '';

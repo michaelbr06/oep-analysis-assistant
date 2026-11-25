@@ -499,11 +499,62 @@
           >
         </section>
 
-        <!-- SECTION 1 — BASELINE REFRACTION -->
+        <!-- SECTION 1 — COVER TEST -->
+        <section class="card" id="card-scheiman-cover-test">
+          <div class="card-head">
+            <div>
+              <h2><span class="card-step-num">1</span> Cover Test</h2>
+              <span class="sub"
+                >Distance (6&nbsp;m) &amp; Near (40&nbsp;cm) Direction &amp;
+                Speed of Recovery</span
+              >
+            </div>
+            <span
+              class="sub"
+              style="font-family: var(--font-mono); font-size: 11px"
+              >6 m &middot; 40 cm</span
+            >
+          </div>
+          <table class="field-table">
+            <thead>
+              <tr>
+                <th style="width: 105px">Test No.</th>
+                <th>Finding</th>
+                <th>Encoded</th>
+                <th>Expected</th>
+                <th style="width: 110px">Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-scheiman-cover-test"></tbody>
+          </table>
+
+          <!-- Live Cover Test Summary & Clear Control -->
+          <div class="ct-recovery-box ct-summary-box">
+            <div class="ct-summary-bar">
+              <div class="ct-recovery-hint" id="ctRecoveryHint">
+                <em
+                  >Optional: Select Distance (6 m) and Near (40 cm) cover test
+                  direction and speed of recovery to evaluate binocular motor
+                  fusion dynamics.</em
+                >
+              </div>
+              <button
+                type="button"
+                class="btn-text-clear"
+                id="ctClearBtn"
+                title="Clear Cover Test selections"
+              >
+                &times; Clear Cover Test
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2 — BASELINE REFRACTION -->
         <section class="card" id="card-scheiman-baseline">
           <div class="card-head">
             <div>
-              <h2><span class="card-step-num">1</span> Baseline Refraction</h2>
+              <h2><span class="card-step-num">2</span> Baseline Refraction</h2>
               <span class="sub"
                 >Distance Objective &amp; Subjective Refractive Baseline</span
               >
@@ -528,12 +579,12 @@
           </table>
         </section>
 
-        <!-- SECTION 2 — PATIENT AGE & AMPLITUDE OF ACCOMMODATION (AOA / NPA) -->
+        <!-- SECTION 3 — PATIENT AGE & AMPLITUDE OF ACCOMMODATION (AOA / NPA) -->
         <section class="card" id="card-scheiman-age-accomm">
           <div class="card-head">
             <div>
               <h2>
-                <span class="card-step-num">2</span> Patient Age &amp; Amplitude
+                <span class="card-step-num">3</span> Patient Age &amp; Amplitude
                 of Accommodation (AOA / NPA)
               </h2>
               <span class="sub"
@@ -630,12 +681,12 @@
           </table>
         </section>
 
-        <!-- SECTION 3 — DISTANCE PHORIA FINDINGS (6 m) -->
+        <!-- SECTION 4 — DISTANCE PHORIA FINDINGS (6 m) -->
         <section class="card" id="card-scheiman-distance">
           <div class="card-head">
             <div>
               <h2>
-                <span class="card-step-num">3</span> Distance Phoria Findings
+                <span class="card-step-num">4</span> Distance Phoria Findings
                 <span class="sub">(6&nbsp;m)</span>
               </h2>
               <span class="sub"
@@ -663,12 +714,12 @@
           </table>
         </section>
 
-        <!-- SECTION 4 — NEARPOINT PHORIA FINDINGS (40 cm) -->
+        <!-- SECTION 5 — NEARPOINT PHORIA FINDINGS (40 cm) -->
         <section class="card" id="card-scheiman-near">
           <div class="card-head">
             <div>
               <h2>
-                <span class="card-step-num">4</span> Nearpoint Phoria Findings
+                <span class="card-step-num">5</span> Nearpoint Phoria Findings
                 <span class="sub">(40&nbsp;cm)</span>
               </h2>
               <span class="sub"
@@ -697,12 +748,12 @@
           </table>
         </section>
 
-        <!-- SECTION 5 — ACCOMMODATIVE BATTERY -->
+        <!-- SECTION 6 — ACCOMMODATIVE BATTERY -->
         <section class="card" id="card-scheiman-accomm">
           <div class="card-head">
             <div>
               <h2>
-                <span class="card-step-num">5</span> Accommodative Battery
+                <span class="card-step-num">6</span> Accommodative Battery
               </h2>
               <span class="sub"
                 >MEM Retinoscopy &middot; Monocular &amp; Binocular
@@ -729,12 +780,12 @@
           </table>
         </section>
 
-        <!-- SECTION 6 — AC/A RATIO (GRADIENT) -->
+        <!-- SECTION 7 — AC/A RATIO (GRADIENT) -->
         <section class="card" id="card-scheiman-aca">
           <div class="card-head">
             <div>
               <h2>
-                <span class="card-step-num">6</span> AC/A Ratio (Gradient)
+                <span class="card-step-num">7</span> AC/A Ratio (Gradient)
               </h2>
               <span class="sub"
                 >Auto-calculated from Near Phoria (#13b) &amp; +1.00 D Phoria
@@ -778,12 +829,12 @@
           </div>
         </section>
 
-        <!-- SECTION 7 — SHEARD'S CRITERION SOLVER -->
+        <!-- SECTION 8 — SHEARD'S CRITERION SOLVER -->
         <section class="card" id="card-scheiman-sheard">
           <div class="card-head">
             <div>
               <h2>
-                <span class="card-step-num">7</span> Sheard's Criterion Solver
+                <span class="card-step-num">8</span> Sheard's Criterion Solver
               </h2>
               <span class="sub"
                 >Primary for Exophoria &middot; Compensating BO Reserve
@@ -877,11 +928,12 @@
               status
             </h3>
             <p id="scheimanDiagDesc">
-              Encode distance and near lateral phorias, NPC, fusional vergence
-              reserves, and accommodative findings to activate the diagnostic
-              evaluation for Convergence Insufficiency/Excess, Divergence
-              Insufficiency/Excess, Basic Exo/Eso, Fusional Vergence
-              Dysfunction, or Accommodative Dysfunctions.
+              Encode cover test findings, distance and near lateral phorias,
+              NPC, fusional vergence reserves, and accommodative findings to
+              activate the diagnostic evaluation for Convergence
+              Insufficiency/Excess, Divergence Insufficiency/Excess, Basic
+              Exo/Eso, Fusional Vergence Dysfunction, or Accommodative
+              Dysfunctions.
             </p>
             <ul class="mgmt-list" id="scheimanMgmtList"></ul>
           </div>

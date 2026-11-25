@@ -1741,10 +1741,70 @@ footer {
   outline-offset: 2px;
 }
 
+.ct-radio-label input[type="radio"]:disabled + .ct-radio-tile {
+  opacity: 0.45;
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+.ct-radio-label:has(input[type="radio"]:disabled) {
+  cursor: not-allowed;
+}
+
+tr.ct-row-disabled td {
+  opacity: 0.65;
+}
+
 .ct-recovery-hint {
   font-size: 12px;
   color: var(--ink-soft);
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.card > .ct-recovery-box:last-child {
+  margin: 12px 18px 16px;
+}
+
+.ct-summary-box {
+  padding: 11px 14px;
+}
+
+.ct-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ct-summary-bar .ct-recovery-hint {
+  flex: 1;
+  min-width: 220px;
+}
+
+.field-table .ct-radio-group {
+  gap: 8px;
+}
+
+.field-table .ct-radio-tile {
+  padding: 5px 11px;
+  font-size: 12px;
+}
+
+.ct-pattern-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #5D3E0A;
+  background: var(--brass-soft);
+  border: 1px solid rgba(168, 121, 43, 0.4);
+  padding: 1px 7px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: baseline;
 }
 
 .btn-text-clear {
